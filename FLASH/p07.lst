@@ -1,0 +1,2357 @@
+
+p07.elf:     file format elf32-littlearm
+
+Sections:
+Idx Name          Size      VMA       LMA       File off  Algn
+  0 .interrupts   000000c0  00000000  00000000  000000b4  2**2
+                  CONTENTS, ALLOC, LOAD, READONLY, DATA
+  1 .text         00000c10  00000800  00000800  00000174  2**2
+                  CONTENTS, ALLOC, LOAD, READONLY, CODE
+  2 .data         000001dc  1fffe000  00001410  00000d84  2**2
+                  CONTENTS, ALLOC, LOAD, DATA
+  3 .bss          000000a8  1fffe1dc  000015ec  00000f60  2**2
+                  ALLOC
+  4 .romp         00000018  1fffe284  000015ec  00000f60  2**0
+                  CONTENTS, ALLOC, LOAD, DATA
+  5 .debug_info   00002699  00000000  00000000  00000f78  2**0
+                  CONTENTS, READONLY, DEBUGGING
+  6 .debug_abbrev 00000ae4  00000000  00000000  00003611  2**0
+                  CONTENTS, READONLY, DEBUGGING
+  7 .debug_loc    00000c28  00000000  00000000  000040f5  2**0
+                  CONTENTS, READONLY, DEBUGGING
+  8 .debug_aranges 00000318  00000000  00000000  00004d20  2**3
+                  CONTENTS, READONLY, DEBUGGING
+  9 .debug_macinfo 00247959  00000000  00000000  00005038  2**0
+                  CONTENTS, READONLY, DEBUGGING
+ 10 .debug_line   00000d8f  00000000  00000000  0024c991  2**0
+                  CONTENTS, READONLY, DEBUGGING
+ 11 .debug_str    000011ff  00000000  00000000  0024d720  2**0
+                  CONTENTS, READONLY, DEBUGGING
+ 12 .comment      00000079  00000000  00000000  0024e91f  2**0
+                  CONTENTS, READONLY
+ 13 .ARM.attributes 0000002d  00000000  00000000  0024e998  2**0
+                  CONTENTS, READONLY
+ 14 .debug_frame  000007d0  00000000  00000000  0024e9c8  2**2
+                  CONTENTS, READONLY, DEBUGGING
+
+Disassembly of section .text:
+
+00000800 <bare_sp_init>:
+@-----------------------------------------------------------------------------------------------------------------------
+.func bare_sp_init, bare_sp_init
+.type bare_sp_init, %function
+.thumb_func
+bare_sp_init:
+    ldr     r0, =__init_sp              @ r0 = memory address where SP register is initialized to point to
+     800:	4809      	ldr	r0, [pc, #36]	; (828 <bare_startup+0x18>)
+    ldr     r1, dead_beef               @ r1 = 0xDEAD_BEEF
+     802:	4902      	ldr	r1, [pc, #8]	; (80c <dead_beef>)
+    str     r1, [r0]                    @ MEM[__init_sp] = 0xDEADBEEF
+     804:	6001      	str	r1, [r0, #0]
+    mov     sp, r0                      @ sp = __init_sp
+     806:	4685      	mov	sp, r0
+    bx      lr                          @ return
+     808:	4770      	bx	lr
+     80a:	46c0      	nop			; (mov r8, r8)
+
+0000080c <dead_beef>:
+     80c:	deadbeef 	.word	0xdeadbeef
+
+00000810 <bare_startup>:
+@-----------------------------------------------------------------------------------------------------------------------
+.func bare_startup, bare_startup
+.type bare_startup, %function
+.thumb_func
+bare_startup:
+    bl      bare_sp_init                   @ bare_sp_init()
+     810:	f7ff fff6 	bl	800 <bare_sp_init>
+    bl      bare_hw_init                   @ bare_hw_init()
+     814:	f000 f94a 	bl	aac <bare_hw_init>
+    bl      bare_bss_zero_fill             @ bare_bss_zero_fill()
+     818:	f000 f84c 	bl	8b4 <bare_bss_zero_fill>
+    bl      bare_copy_rom_sections_to_ram  @ bare_copy_rom_sections_to_ram()
+     81c:	f000 f906 	bl	a2c <bare_copy_rom_sections_to_ram>
+    bl      main
+     820:	f000 fcf2 	bl	1208 <main>
+
+@ Drop into an infinite loop if main() should return
+1:  b       1b
+     824:	e7fe      	b.n	824 <bare_startup+0x14>
+     826:	0000      	.short	0x0000
+@-----------------------------------------------------------------------------------------------------------------------
+.func bare_sp_init, bare_sp_init
+.type bare_sp_init, %function
+.thumb_func
+bare_sp_init:
+    ldr     r0, =__init_sp              @ r0 = memory address where SP register is initialized to point to
+     828:	20005ffc 	.word	0x20005ffc
+
+0000082c <cse325_memcpy>:
+//
+// DESCRIPTION
+// See comments in libcse325.h.
+//----------------------------------------------------------------------------------------------------------------------
+void cse325_memcpy(uint8_t *p_dst, uint8_t *p_src, int p_size)
+{
+     82c:	b580      	push	{r7, lr}
+     82e:	b084      	sub	sp, #16
+     830:	af00      	add	r7, sp, #0
+     832:	60f8      	str	r0, [r7, #12]
+     834:	60b9      	str	r1, [r7, #8]
+     836:	607a      	str	r2, [r7, #4]
+    if (p_dst == p_src || !p_dst || !p_src) return;
+     838:	68fa      	ldr	r2, [r7, #12]
+     83a:	68bb      	ldr	r3, [r7, #8]
+     83c:	429a      	cmp	r2, r3
+     83e:	d017      	beq.n	870 <cse325_memcpy+0x44>
+     840:	68fb      	ldr	r3, [r7, #12]
+     842:	2b00      	cmp	r3, #0
+     844:	d014      	beq.n	870 <cse325_memcpy+0x44>
+     846:	68bb      	ldr	r3, [r7, #8]
+     848:	2b00      	cmp	r3, #0
+     84a:	d10d      	bne.n	868 <cse325_memcpy+0x3c>
+     84c:	e010      	b.n	870 <cse325_memcpy+0x44>
+    for ( ; p_size > 0; --p_size) {
+        *p_dst++ = *p_src++;
+     84e:	68bb      	ldr	r3, [r7, #8]
+     850:	781a      	ldrb	r2, [r3, #0]
+     852:	68fb      	ldr	r3, [r7, #12]
+     854:	701a      	strb	r2, [r3, #0]
+     856:	68fb      	ldr	r3, [r7, #12]
+     858:	3301      	adds	r3, #1
+     85a:	60fb      	str	r3, [r7, #12]
+     85c:	68bb      	ldr	r3, [r7, #8]
+     85e:	3301      	adds	r3, #1
+     860:	60bb      	str	r3, [r7, #8]
+// See comments in libcse325.h.
+//----------------------------------------------------------------------------------------------------------------------
+void cse325_memcpy(uint8_t *p_dst, uint8_t *p_src, int p_size)
+{
+    if (p_dst == p_src || !p_dst || !p_src) return;
+    for ( ; p_size > 0; --p_size) {
+     862:	687b      	ldr	r3, [r7, #4]
+     864:	3b01      	subs	r3, #1
+     866:	607b      	str	r3, [r7, #4]
+     868:	687b      	ldr	r3, [r7, #4]
+     86a:	2b00      	cmp	r3, #0
+     86c:	dcef      	bgt.n	84e <cse325_memcpy+0x22>
+     86e:	e000      	b.n	872 <cse325_memcpy+0x46>
+// DESCRIPTION
+// See comments in libcse325.h.
+//----------------------------------------------------------------------------------------------------------------------
+void cse325_memcpy(uint8_t *p_dst, uint8_t *p_src, int p_size)
+{
+    if (p_dst == p_src || !p_dst || !p_src) return;
+     870:	46c0      	nop			; (mov r8, r8)
+    for ( ; p_size > 0; --p_size) {
+        *p_dst++ = *p_src++;
+    }
+}
+     872:	46bd      	mov	sp, r7
+     874:	b004      	add	sp, #16
+     876:	bd80      	pop	{r7, pc}
+
+00000878 <cse325_memset>:
+//
+// DESCRIPTION
+// See comments in libcse325.h.
+//----------------------------------------------------------------------------------------------------------------------
+void cse325_memset(uint8_t *p_begin, uint8_t p_fill_value, int p_size)
+{
+     878:	b580      	push	{r7, lr}
+     87a:	b084      	sub	sp, #16
+     87c:	af00      	add	r7, sp, #0
+     87e:	60f8      	str	r0, [r7, #12]
+     880:	607a      	str	r2, [r7, #4]
+     882:	1c3b      	adds	r3, r7, #0
+     884:	330b      	adds	r3, #11
+     886:	1c0a      	adds	r2, r1, #0
+     888:	701a      	strb	r2, [r3, #0]
+    if (!p_begin) return;
+     88a:	68fb      	ldr	r3, [r7, #12]
+     88c:	2b00      	cmp	r3, #0
+     88e:	d10b      	bne.n	8a8 <cse325_memset+0x30>
+     890:	e00d      	b.n	8ae <cse325_memset+0x36>
+    for ( ; p_size > 0; --p_size) {
+        *p_begin++ = p_fill_value;
+     892:	68fb      	ldr	r3, [r7, #12]
+     894:	1c3a      	adds	r2, r7, #0
+     896:	320b      	adds	r2, #11
+     898:	7812      	ldrb	r2, [r2, #0]
+     89a:	701a      	strb	r2, [r3, #0]
+     89c:	68fb      	ldr	r3, [r7, #12]
+     89e:	3301      	adds	r3, #1
+     8a0:	60fb      	str	r3, [r7, #12]
+// See comments in libcse325.h.
+//----------------------------------------------------------------------------------------------------------------------
+void cse325_memset(uint8_t *p_begin, uint8_t p_fill_value, int p_size)
+{
+    if (!p_begin) return;
+    for ( ; p_size > 0; --p_size) {
+     8a2:	687b      	ldr	r3, [r7, #4]
+     8a4:	3b01      	subs	r3, #1
+     8a6:	607b      	str	r3, [r7, #4]
+     8a8:	687b      	ldr	r3, [r7, #4]
+     8aa:	2b00      	cmp	r3, #0
+     8ac:	dcf1      	bgt.n	892 <cse325_memset+0x1a>
+        *p_begin++ = p_fill_value;
+    }
+}
+     8ae:	46bd      	mov	sp, r7
+     8b0:	b004      	add	sp, #16
+     8b2:	bd80      	pop	{r7, pc}
+
+000008b4 <bare_bss_zero_fill>:
+// DESCRIPTION
+// This function fills the .bss section in RAM with all zeros. __bss_begin and __bss_end are defined in the linker
+// script.
+//----------------------------------------------------------------------------------------------------------------------
+void bare_bss_zero_fill()
+{
+     8b4:	b580      	push	{r7, lr}
+     8b6:	af00      	add	r7, sp, #0
+    extern uint8_t __bss_begin[];
+    extern uint8_t __bss_end[];
+    cse325_memset(__bss_begin, 0, __bss_end - __bss_begin);
+     8b8:	4a05      	ldr	r2, [pc, #20]	; (8d0 <bare_bss_zero_fill+0x1c>)
+     8ba:	4b06      	ldr	r3, [pc, #24]	; (8d4 <bare_bss_zero_fill+0x20>)
+     8bc:	1ad3      	subs	r3, r2, r3
+     8be:	4a05      	ldr	r2, [pc, #20]	; (8d4 <bare_bss_zero_fill+0x20>)
+     8c0:	1c10      	adds	r0, r2, #0
+     8c2:	2100      	movs	r1, #0
+     8c4:	1c1a      	adds	r2, r3, #0
+     8c6:	f7ff ffd7 	bl	878 <cse325_memset>
+}
+     8ca:	46bd      	mov	sp, r7
+     8cc:	bd80      	pop	{r7, pc}
+     8ce:	46c0      	nop			; (mov r8, r8)
+     8d0:	1fffe284 	.word	0x1fffe284
+     8d4:	1fffe1dc 	.word	0x1fffe1dc
+
+000008d8 <bare_clocks_init>:
+// DESCRIPTION
+// Initializes the Core, Platform, and System clocks to 48 MHz and the Bus and Flash clocks to 24 MHz. This code is
+// originally from Freescale, but I modified it a bit to make it -- in my opinion -- a bit more readable.
+//----------------------------------------------------------------------------------------------------------------------
+static void bare_clocks_init()
+{
+     8d8:	b580      	push	{r7, lr}
+     8da:	b082      	sub	sp, #8
+     8dc:	af00      	add	r7, sp, #0
+    // value will be 2 and the Bus and Flash clock divider value will be 2. The PLL VCOCLK output will be configured to
+    // 96 MHz, so these dividers will result in the Core, Platform, and System clock freqs to be 48 MHz and the Bus
+    // and Flash clock freqs to be 24 MHz.
+    // SIM_CLKDIV1[OUTDIV1] = 1 (divide value for Core, Platform, and System clocks = 2)
+    // SIM_CLKDIV1[OUTDIV4] = 1 (divide value for Bus and Flash clocks = 2; clock freq will be one-half System clock)
+    SIM_CLKDIV1 = 0x10010000;
+     8de:	4a46      	ldr	r2, [pc, #280]	; (9f8 <bare_clocks_init+0x120>)
+     8e0:	4b46      	ldr	r3, [pc, #280]	; (9fc <bare_clocks_init+0x124>)
+     8e2:	4947      	ldr	r1, [pc, #284]	; (a00 <bare_clocks_init+0x128>)
+     8e4:	50d1      	str	r1, [r2, r3]
+    // MCG_SC[ATMS]     = unchanged
+    // MCG_SC[ATF]      = unchanged
+    // MCG_SC[FLTPRSRV] = unchanged
+    // MCG_SC[FRCDIV]   = 0b000 (divide-by-1)
+    // MCG_SC[LOCS0]    = unchanged
+    MCG_SC &= ~(0b111 << 1);
+     8e6:	4b47      	ldr	r3, [pc, #284]	; (a04 <bare_clocks_init+0x12c>)
+     8e8:	4a46      	ldr	r2, [pc, #280]	; (a04 <bare_clocks_init+0x12c>)
+     8ea:	7a12      	ldrb	r2, [r2, #8]
+     8ec:	b2d2      	uxtb	r2, r2
+     8ee:	210e      	movs	r1, #14
+     8f0:	438a      	bics	r2, r1
+     8f2:	b2d2      	uxtb	r2, r2
+     8f4:	721a      	strb	r2, [r3, #8]
+    // MCG_C2[RANGE0]  = 0b10 (OSC external clock source is very high range 8-32 MHz)
+    // MCG_C2[HGO0]    = 0 (OSC configured for low power operation)
+    // MCG_C2[EREFS0]  = 1 (external ref clock from OSC = EXTAL is requested)
+    // MCG_C2[LP]      = 0 (FLL or PLL is not disabled in bypass mode)
+    // MCG_C2[IRCS]    = 1 (MCGIRCLK is fast internal ref clock)
+    uint8_t mcg_c2 = MCG_C2;               // mcg_c2 = current value of MCG_C2
+     8f6:	4a43      	ldr	r2, [pc, #268]	; (a04 <bare_clocks_init+0x12c>)
+     8f8:	1dfb      	adds	r3, r7, #7
+     8fa:	7852      	ldrb	r2, [r2, #1]
+     8fc:	701a      	strb	r2, [r3, #0]
+    mcg_c2 &= 0b01000000;                  // Clear all bits except for FCFTRIM, leave it unchanged
+     8fe:	1dfb      	adds	r3, r7, #7
+     900:	1dfa      	adds	r2, r7, #7
+     902:	7811      	ldrb	r1, [r2, #0]
+     904:	2240      	movs	r2, #64	; 0x40
+     906:	400a      	ands	r2, r1
+     908:	701a      	strb	r2, [r3, #0]
+    mcg_c2 |= (0b10 << 4) | (1 << 2) | 1;  // Write 0b10 to OSC, 1 to EREFS0, and 1 to MCGIRCLK
+     90a:	1dfb      	adds	r3, r7, #7
+     90c:	1dfa      	adds	r2, r7, #7
+     90e:	7812      	ldrb	r2, [r2, #0]
+     910:	2125      	movs	r1, #37	; 0x25
+     912:	430a      	orrs	r2, r1
+     914:	701a      	strb	r2, [r3, #0]
+    MCG_C2 = mcg_c2;                       // Update MCG_C2
+     916:	4b3b      	ldr	r3, [pc, #236]	; (a04 <bare_clocks_init+0x12c>)
+     918:	1dfa      	adds	r2, r7, #7
+     91a:	7812      	ldrb	r2, [r2, #0]
+     91c:	705a      	strb	r2, [r3, #1]
+
+    // Continuing, configure OSC0_CR.
+    // OSC0_CR[ERCLKEN]  = 1 (enable OSCERCLK)
+    // OSC0_CR[EREFSTEN] = 0 (OSCERCLK is disabled in Stop mode)
+    OSC0_CR = 0b10000000;
+     91e:	4b3a      	ldr	r3, [pc, #232]	; (a08 <bare_clocks_init+0x130>)
+     920:	2280      	movs	r2, #128	; 0x80
+     922:	701a      	strb	r2, [r3, #0]
+    // MCG_C1[CLKS]     = 0b10 (MCGOUTCLK is external ref clock OSCCLK = 8 MHz)
+    // MCG_C1[FRDIV]    = 0b011 = 3 (external ref clock OSCCLK is divided by 256 = 8 MHz / 256 = 31.25 KHz)
+    // MCG_C1[IREFS]    = 0 (FLL clock source is OSCCLK divided by FRDIV)
+    // MCG_C1[IRCLKEN]  = 1 (MCGIRCLK is enabled)
+    // MCG_C1[IREFSTEN] = 0 (internal ref clock is disabled in Stop mode)
+    MCG_C1 = 0b10011010;
+     924:	4b37      	ldr	r3, [pc, #220]	; (a04 <bare_clocks_init+0x12c>)
+     926:	229a      	movs	r2, #154	; 0x9a
+     928:	701a      	strb	r2, [r3, #0]
+    // MCG_C4[FCTRIM]   = 0b1000
+    // MCG_C4[SCFTRIM]  = 0
+    // When DMX32:DRST_DRS = 0b000 = 0, the FLL clock source reference range is [31.25, 39.0625] KHz, the FLL multiplier
+    // factor is 640, and the DCOCLK range is [20, 25] MHz. In our case, since the FLL clock source is 31.25 KHz, the
+    // DCOCLK will be 32.25 KHz x 640 = 20 MHz.
+    uint8_t mcg_c4 = MCG_C4;  // mcg_c4 = current value of MCG_C4
+     92a:	4a36      	ldr	r2, [pc, #216]	; (a04 <bare_clocks_init+0x12c>)
+     92c:	1dbb      	adds	r3, r7, #6
+     92e:	78d2      	ldrb	r2, [r2, #3]
+     930:	701a      	strb	r2, [r3, #0]
+    mcg_c4 &= 0b00011110;     // Clear all bits except for FCTRIM, leave it unchanged
+     932:	1dbb      	adds	r3, r7, #6
+     934:	1dba      	adds	r2, r7, #6
+     936:	7811      	ldrb	r1, [r2, #0]
+     938:	221e      	movs	r2, #30
+     93a:	400a      	ands	r2, r1
+     93c:	701a      	strb	r2, [r3, #0]
+    MCG_C4 = mcg_c4;          // Update MCG_C4
+     93e:	4b31      	ldr	r3, [pc, #196]	; (a04 <bare_clocks_init+0x12c>)
+     940:	1dba      	adds	r2, r7, #6
+     942:	7812      	ldrb	r2, [r2, #0]
+     944:	70da      	strb	r2, [r3, #3]
+    // Continuing, configure MCG_C5.
+    // MCG_C5[reserved] = 0
+    // MCG_C5[PLLCLKEN] = 0 (MCGPLLCLK is inactive)
+    // MCG_C5[PLLSTEN0] = 0 (MCGPLLCLK is disabled in Stop mode)
+    // MCG_C5[PRDIV0]   = 0b00001 (divides the PLL external ref clock OSCCLK by 2; will be 8 MHz / 2 = 4 MHz)
+    MCG_C5 = 0b00000001;
+     946:	4b2f      	ldr	r3, [pc, #188]	; (a04 <bare_clocks_init+0x12c>)
+     948:	2201      	movs	r2, #1
+     94a:	711a      	strb	r2, [r3, #4]
+    // Continuing, configure MCG_C6.
+    // MCG_C6[LOLIE0] = 0 (no irq generated on loss of FLL or PLL lock)
+    // MCG_C6[PLLS]   = 0 (MCGOUTCLK is still external ref clock OSCCLK = 8 MHz)
+    // MCG_C6[CME0]   = 0 (disables clock monitoring for OSC)
+    // MCG_C6[VDIV0]  = 0b00000 (VCOCLK output from PLL is multiplied by 24; it will be 96 MHz)
+    MCG_C6 = 0b00000000;
+     94c:	4b2d      	ldr	r3, [pc, #180]	; (a04 <bare_clocks_init+0x12c>)
+     94e:	2200      	movs	r2, #0
+     950:	715a      	strb	r2, [r3, #5]
+
+    // Wait until MCG_S[IREFST] changes to 0 indicating that the source of the FLL ref clock is the external ref
+    // clock OSCCLK). At this time MCGOUTCLK is 8 MHz.
+    while ((MCG_S & 0b00010000) != 0b00000000) {
+     952:	46c0      	nop			; (mov r8, r8)
+     954:	4b2b      	ldr	r3, [pc, #172]	; (a04 <bare_clocks_init+0x12c>)
+     956:	799b      	ldrb	r3, [r3, #6]
+     958:	b2db      	uxtb	r3, r3
+     95a:	1c1a      	adds	r2, r3, #0
+     95c:	2310      	movs	r3, #16
+     95e:	4013      	ands	r3, r2
+     960:	d1f8      	bne.n	954 <bare_clocks_init+0x7c>
+    }
+
+    // Wait until MCG_S[CLKST] changes to 0b10 indicating that MCGOUTCLK is OSCCLK = 8 MHz.
+    while ((MCG_S & 0b00001100) != 0b00001000) {
+     962:	46c0      	nop			; (mov r8, r8)
+     964:	4b27      	ldr	r3, [pc, #156]	; (a04 <bare_clocks_init+0x12c>)
+     966:	799b      	ldrb	r3, [r3, #6]
+     968:	b2db      	uxtb	r3, r3
+     96a:	1c1a      	adds	r2, r3, #0
+     96c:	230c      	movs	r3, #12
+     96e:	4013      	ands	r3, r2
+     970:	2b08      	cmp	r3, #8
+     972:	d1f7      	bne.n	964 <bare_clocks_init+0x8c>
+    // We are now in FBE mode. Switch to PBE mode by configuring MCG_C6.
+    // MCG_C6[LOLIE0] = 0 (no irq generated on loss of FLL or PLL lock)
+    // MCG_C6[PLLS]   = 1 (MCGOUTCLK is MCGPLLCLK)
+    // MCG_C6[CME0]   = 0 (disables clock monitoring for OSC)
+    // MCG_C6[VDIV0]  = 0b00000 (VCOCLK output from PLL is multiplied by 24; it will be 96 MHz)
+    MCG_C6 = 0b01000000;
+     974:	4b23      	ldr	r3, [pc, #140]	; (a04 <bare_clocks_init+0x12c>)
+     976:	2240      	movs	r2, #64	; 0x40
+     978:	715a      	strb	r2, [r3, #5]
+
+    // Wait until MCG_S[CLKST] changes to 0b10 indicating that MCGOUTCLK is OSCCLK = 8 MHz).
+    while ((MCG_S & 0b00001100) != 0b00001000) {
+     97a:	46c0      	nop			; (mov r8, r8)
+     97c:	4b21      	ldr	r3, [pc, #132]	; (a04 <bare_clocks_init+0x12c>)
+     97e:	799b      	ldrb	r3, [r3, #6]
+     980:	b2db      	uxtb	r3, r3
+     982:	1c1a      	adds	r2, r3, #0
+     984:	230c      	movs	r3, #12
+     986:	4013      	ands	r3, r2
+     988:	2b08      	cmp	r3, #8
+     98a:	d1f7      	bne.n	97c <bare_clocks_init+0xa4>
+    }
+
+    // Wait until MCG_S[LOCK0] changes to 1 indicating that the PLL has locked onto its ref clock.
+    while ((MCG_S & 0b01000000) == 0b00000000) {
+     98c:	46c0      	nop			; (mov r8, r8)
+     98e:	4b1d      	ldr	r3, [pc, #116]	; (a04 <bare_clocks_init+0x12c>)
+     990:	799b      	ldrb	r3, [r3, #6]
+     992:	b2db      	uxtb	r3, r3
+     994:	1c1a      	adds	r2, r3, #0
+     996:	2340      	movs	r3, #64	; 0x40
+     998:	4013      	ands	r3, r2
+     99a:	d0f8      	beq.n	98e <bare_clocks_init+0xb6>
+    // MCG_C1[CLKS]     = 0b00 (MCGOUTCLK is MCGPLLCLK which is VCOCLK / 2 = 96 MHz / 2 = 48 MHz)
+    // MCG_C1[FRDIV]    = 0b011 = 3 (do not change)
+    // MCG_C1[IREFS]    = 0 (do not change)
+    // MCG_C1[IRCLKEN]  = 1 (MCGIRCLK is enabled)
+    // MCG_C1[IREFSTEN] = 0 (internal ref clock is disabled in Stop mode)
+    MCG_C1 = 0b00011010;
+     99c:	4b19      	ldr	r3, [pc, #100]	; (a04 <bare_clocks_init+0x12c>)
+     99e:	221a      	movs	r2, #26
+     9a0:	701a      	strb	r2, [r3, #0]
+
+    // Wait until MCG_S[CLKST] changes to 0b11 indicating that MCGOUTCLK = MCGPLLCLK = 48 MHz).
+    while ((MCG_S & 0b00001100) != 0b00001100) {
+     9a2:	46c0      	nop			; (mov r8, r8)
+     9a4:	4b17      	ldr	r3, [pc, #92]	; (a04 <bare_clocks_init+0x12c>)
+     9a6:	799b      	ldrb	r3, [r3, #6]
+     9a8:	b2db      	uxtb	r3, r3
+     9aa:	1c1a      	adds	r2, r3, #0
+     9ac:	230c      	movs	r3, #12
+     9ae:	4013      	ands	r3, r2
+     9b0:	2b0c      	cmp	r3, #12
+     9b2:	d1f7      	bne.n	9a4 <bare_clocks_init+0xcc>
+    }
+
+    // Set global variables. These are defined in global.c and declared in global.h.
+    global_core_clock_freq_mhz     = 48;
+     9b4:	4b15      	ldr	r3, [pc, #84]	; (a0c <bare_clocks_init+0x134>)
+     9b6:	2230      	movs	r2, #48	; 0x30
+     9b8:	601a      	str	r2, [r3, #0]
+    global_platform_clock_freq_mhz = 48;
+     9ba:	4b15      	ldr	r3, [pc, #84]	; (a10 <bare_clocks_init+0x138>)
+     9bc:	2230      	movs	r2, #48	; 0x30
+     9be:	601a      	str	r2, [r3, #0]
+    global_system_clock_freq_mhz   = 48;
+     9c0:	4b14      	ldr	r3, [pc, #80]	; (a14 <bare_clocks_init+0x13c>)
+     9c2:	2230      	movs	r2, #48	; 0x30
+     9c4:	601a      	str	r2, [r3, #0]
+    global_bus_clock_freq_mhz      = 24;
+     9c6:	4b14      	ldr	r3, [pc, #80]	; (a18 <bare_clocks_init+0x140>)
+     9c8:	2218      	movs	r2, #24
+     9ca:	601a      	str	r2, [r3, #0]
+    global_flash_clock_freq_mhz    = 24;
+     9cc:	4b13      	ldr	r3, [pc, #76]	; (a1c <bare_clocks_init+0x144>)
+     9ce:	2218      	movs	r2, #24
+     9d0:	601a      	str	r2, [r3, #0]
+    global_oscerclk_freq_mhz       = 8;
+     9d2:	4b13      	ldr	r3, [pc, #76]	; (a20 <bare_clocks_init+0x148>)
+     9d4:	2208      	movs	r2, #8
+     9d6:	601a      	str	r2, [r3, #0]
+    global_mcgirclk_freq_mhz       = 4;  // Note that MCGIRCLK is the fast internal reference clock = 4 MHz
+     9d8:	4b12      	ldr	r3, [pc, #72]	; (a24 <bare_clocks_init+0x14c>)
+     9da:	2204      	movs	r2, #4
+     9dc:	601a      	str	r2, [r3, #0]
+
+    // Select MCGPLLCLK/2 to be the clock source for some peripherals.
+    SIM_SOPT2 |= 1 << 16;
+     9de:	4a06      	ldr	r2, [pc, #24]	; (9f8 <bare_clocks_init+0x120>)
+     9e0:	4905      	ldr	r1, [pc, #20]	; (9f8 <bare_clocks_init+0x120>)
+     9e2:	4b11      	ldr	r3, [pc, #68]	; (a28 <bare_clocks_init+0x150>)
+     9e4:	58cb      	ldr	r3, [r1, r3]
+     9e6:	2180      	movs	r1, #128	; 0x80
+     9e8:	0249      	lsls	r1, r1, #9
+     9ea:	4319      	orrs	r1, r3
+     9ec:	4b0e      	ldr	r3, [pc, #56]	; (a28 <bare_clocks_init+0x150>)
+     9ee:	50d1      	str	r1, [r2, r3]
+
+    #ifdef CLKOUT_ENABLE
+        // Enable the CLKOUT pin to be the Bus clock. Note that this disables use of PTC3.
+       bare_clkout_init();
+    #endif
+}
+     9f0:	46bd      	mov	sp, r7
+     9f2:	b002      	add	sp, #8
+     9f4:	bd80      	pop	{r7, pc}
+     9f6:	46c0      	nop			; (mov r8, r8)
+     9f8:	40047000 	.word	0x40047000
+     9fc:	00001044 	.word	0x00001044
+     a00:	10010000 	.word	0x10010000
+     a04:	40064000 	.word	0x40064000
+     a08:	40065000 	.word	0x40065000
+     a0c:	1fffe26c 	.word	0x1fffe26c
+     a10:	1fffe270 	.word	0x1fffe270
+     a14:	1fffe27c 	.word	0x1fffe27c
+     a18:	1fffe280 	.word	0x1fffe280
+     a1c:	1fffe278 	.word	0x1fffe278
+     a20:	1fffe274 	.word	0x1fffe274
+     a24:	1fffe268 	.word	0x1fffe268
+     a28:	00001004 	.word	0x00001004
+
+00000a2c <bare_copy_rom_sections_to_ram>:
+// This function copies all sections marked as ROM in the .elf file to their target addresses in SRAM. __romp is
+// defined in the linker script as a 1D array where each element is a structure of type bare_rom_table_t. The end of
+// the ROM entries is specified by a structure with all 0's for each of the fields.
+//----------------------------------------------------------------------------------------------------------------------
+void bare_copy_rom_sections_to_ram()
+{
+     a2c:	b590      	push	{r4, r7, lr}
+     a2e:	b083      	sub	sp, #12
+     a30:	af00      	add	r7, sp, #0
+    // If there are no ROM sections to copy then return.
+    if (__romp == 0L) return;
+
+    // Iterate over table entry, copying the section from ROM to SRAM.
+    for (int i = 0; __romp[i].m_source != 0L; ++i) {
+     a32:	2300      	movs	r3, #0
+     a34:	607b      	str	r3, [r7, #4]
+     a36:	e01e      	b.n	a76 <bare_copy_rom_sections_to_ram+0x4a>
+        cse325_memcpy(__romp[i].m_target, __romp[i].m_source, __romp[i].m_size);
+     a38:	4915      	ldr	r1, [pc, #84]	; (a90 <bare_copy_rom_sections_to_ram+0x64>)
+     a3a:	687a      	ldr	r2, [r7, #4]
+     a3c:	1c13      	adds	r3, r2, #0
+     a3e:	005b      	lsls	r3, r3, #1
+     a40:	189b      	adds	r3, r3, r2
+     a42:	009b      	lsls	r3, r3, #2
+     a44:	18cb      	adds	r3, r1, r3
+     a46:	3304      	adds	r3, #4
+     a48:	6818      	ldr	r0, [r3, #0]
+     a4a:	4911      	ldr	r1, [pc, #68]	; (a90 <bare_copy_rom_sections_to_ram+0x64>)
+     a4c:	687a      	ldr	r2, [r7, #4]
+     a4e:	1c13      	adds	r3, r2, #0
+     a50:	005b      	lsls	r3, r3, #1
+     a52:	189b      	adds	r3, r3, r2
+     a54:	009b      	lsls	r3, r3, #2
+     a56:	5859      	ldr	r1, [r3, r1]
+     a58:	4c0d      	ldr	r4, [pc, #52]	; (a90 <bare_copy_rom_sections_to_ram+0x64>)
+     a5a:	687a      	ldr	r2, [r7, #4]
+     a5c:	1c13      	adds	r3, r2, #0
+     a5e:	005b      	lsls	r3, r3, #1
+     a60:	189b      	adds	r3, r3, r2
+     a62:	009b      	lsls	r3, r3, #2
+     a64:	18e3      	adds	r3, r4, r3
+     a66:	3308      	adds	r3, #8
+     a68:	681b      	ldr	r3, [r3, #0]
+     a6a:	1c1a      	adds	r2, r3, #0
+     a6c:	f7ff fede 	bl	82c <cse325_memcpy>
+{
+    // If there are no ROM sections to copy then return.
+    if (__romp == 0L) return;
+
+    // Iterate over table entry, copying the section from ROM to SRAM.
+    for (int i = 0; __romp[i].m_source != 0L; ++i) {
+     a70:	687b      	ldr	r3, [r7, #4]
+     a72:	3301      	adds	r3, #1
+     a74:	607b      	str	r3, [r7, #4]
+     a76:	4906      	ldr	r1, [pc, #24]	; (a90 <bare_copy_rom_sections_to_ram+0x64>)
+     a78:	687a      	ldr	r2, [r7, #4]
+     a7a:	1c13      	adds	r3, r2, #0
+     a7c:	005b      	lsls	r3, r3, #1
+     a7e:	189b      	adds	r3, r3, r2
+     a80:	009b      	lsls	r3, r3, #2
+     a82:	585b      	ldr	r3, [r3, r1]
+     a84:	2b00      	cmp	r3, #0
+     a86:	d1d7      	bne.n	a38 <bare_copy_rom_sections_to_ram+0xc>
+        cse325_memcpy(__romp[i].m_target, __romp[i].m_source, __romp[i].m_size);
+    }
+}
+     a88:	46bd      	mov	sp, r7
+     a8a:	b003      	add	sp, #12
+     a8c:	bd90      	pop	{r4, r7, pc}
+     a8e:	46c0      	nop			; (mov r8, r8)
+     a90:	000015ec 	.word	0x000015ec
+
+00000a94 <bare_default_isr>:
+// DESCRIPTION
+// Default interrupt service routine. All interrupt vectors direct here unless changed by writing a new address for the
+// ISR to the vector table. This function simply executes an ARM breakpoint instruction, which causes execution to halt.
+//----------------------------------------------------------------------------------------------------------------------
+void bare_default_isr()
+{
+     a94:	b580      	push	{r7, lr}
+     a96:	af00      	add	r7, sp, #0
+    __asm("bkpt");
+     a98:	be00      	bkpt	0x0000
+}
+     a9a:	46bd      	mov	sp, r7
+     a9c:	bd80      	pop	{r7, pc}
+     a9e:	46c0      	nop			; (mov r8, r8)
+
+00000aa0 <bare_hardfault_isr>:
+//
+// REMARKS
+// When bkpt is reached, the address of the instruction which generated the hardfault can be found at Mem[SP + 32].
+//----------------------------------------------------------------------------------------------------------------------
+void bare_hardfault_isr()
+{
+     aa0:	b580      	push	{r7, lr}
+     aa2:	af00      	add	r7, sp, #0
+    __asm("bkpt");
+     aa4:	be00      	bkpt	0x0000
+}
+     aa6:	46bd      	mov	sp, r7
+     aa8:	bd80      	pop	{r7, pc}
+     aaa:	46c0      	nop			; (mov r8, r8)
+
+00000aac <bare_hw_init>:
+//
+// DESCRIPTION
+// Called by bare_startup. Initializes SCB_VTOR and SIM_COPC.
+//----------------------------------------------------------------------------------------------------------------------
+void bare_hw_init()
+{
+     aac:	b580      	push	{r7, lr}
+     aae:	af00      	add	r7, sp, #0
+    // Write the address of the exception vector table to SCB_VTOR.
+    SCB_VTOR = (uint32_t)__vector_table;
+     ab0:	4a06      	ldr	r2, [pc, #24]	; (acc <bare_hw_init+0x20>)
+     ab2:	4907      	ldr	r1, [pc, #28]	; (ad0 <bare_hw_init+0x24>)
+     ab4:	4b07      	ldr	r3, [pc, #28]	; (ad4 <bare_hw_init+0x28>)
+     ab6:	50d1      	str	r1, [r2, r3]
+
+    // Disable the watchdog because it may reset the core before entering main().
+    SIM_COPC = 0x00000000;
+     ab8:	4a07      	ldr	r2, [pc, #28]	; (ad8 <bare_hw_init+0x2c>)
+     aba:	2388      	movs	r3, #136	; 0x88
+     abc:	015b      	lsls	r3, r3, #5
+     abe:	2100      	movs	r1, #0
+     ac0:	50d1      	str	r1, [r2, r3]
+
+    // Initialize the Core, Platform, System, Bus, and Flash clocks.
+    bare_clocks_init();
+     ac2:	f7ff ff09 	bl	8d8 <bare_clocks_init>
+}
+     ac6:	46bd      	mov	sp, r7
+     ac8:	bd80      	pop	{r7, pc}
+     aca:	46c0      	nop			; (mov r8, r8)
+     acc:	e000e000 	.word	0xe000e000
+     ad0:	00000000 	.word	0x00000000
+     ad4:	00000d08 	.word	0x00000d08
+     ad8:	40047000 	.word	0x40047000
+
+00000adc <systick_isr>:
+//
+// NOTE
+// The SysTick interrupt request flag is automatically cleared.
+//----------------------------------------------------------------------------------------------------------------------
+void systick_isr()
+{
+     adc:	b580      	push	{r7, lr}
+     ade:	af00      	add	r7, sp, #0
+    // If requested, call the users callback function, passing the current value of the SysTick counter.
+    if (g_callback) {
+     ae0:	4b05      	ldr	r3, [pc, #20]	; (af8 <systick_isr+0x1c>)
+     ae2:	681b      	ldr	r3, [r3, #0]
+     ae4:	2b00      	cmp	r3, #0
+     ae6:	d005      	beq.n	af4 <systick_isr+0x18>
+        g_callback(SYST_CVR);
+     ae8:	4b03      	ldr	r3, [pc, #12]	; (af8 <systick_isr+0x1c>)
+     aea:	681a      	ldr	r2, [r3, #0]
+     aec:	4b03      	ldr	r3, [pc, #12]	; (afc <systick_isr+0x20>)
+     aee:	689b      	ldr	r3, [r3, #8]
+     af0:	1c18      	adds	r0, r3, #0
+     af2:	4790      	blx	r2
+    }
+}
+     af4:	46bd      	mov	sp, r7
+     af6:	bd80      	pop	{r7, pc}
+     af8:	1fffe1dc 	.word	0x1fffe1dc
+     afc:	e000e010 	.word	0xe000e010
+
+00000b00 <spi1_init>:
+#include "spi.h"
+#include "global.h"
+
+
+void spi1_init()
+{
+     b00:	b580      	push	{r7, lr}
+     b02:	af00      	add	r7, sp, #0
+	//Enable SIM to SPI1
+	SIM_SCGC4 |= (1 << 23);
+     b04:	4a4e      	ldr	r2, [pc, #312]	; (c40 <spi1_init+0x140>)
+     b06:	494e      	ldr	r1, [pc, #312]	; (c40 <spi1_init+0x140>)
+     b08:	4b4e      	ldr	r3, [pc, #312]	; (c44 <spi1_init+0x144>)
+     b0a:	58cb      	ldr	r3, [r1, r3]
+     b0c:	2180      	movs	r1, #128	; 0x80
+     b0e:	0409      	lsls	r1, r1, #16
+     b10:	4319      	orrs	r1, r3
+     b12:	4b4c      	ldr	r3, [pc, #304]	; (c44 <spi1_init+0x144>)
+     b14:	50d1      	str	r1, [r2, r3]
+
+	//Activate the SPI1 module.
+	//SPI1_C1[SPE] = 1
+	SPI1_C1 |= (1 << 6);
+     b16:	4b4c      	ldr	r3, [pc, #304]	; (c48 <spi1_init+0x148>)
+     b18:	4a4b      	ldr	r2, [pc, #300]	; (c48 <spi1_init+0x148>)
+     b1a:	78d2      	ldrb	r2, [r2, #3]
+     b1c:	b2d2      	uxtb	r2, r2
+     b1e:	2140      	movs	r1, #64	; 0x40
+     b20:	430a      	orrs	r2, r1
+     b22:	b2d2      	uxtb	r2, r2
+     b24:	70da      	strb	r2, [r3, #3]
+
+	//Configure the MKL46Z to be the SPI master.
+	//SPI1_C1[MSTR] = 1
+	SPI1_C1 |= (1 << 4);
+     b26:	4b48      	ldr	r3, [pc, #288]	; (c48 <spi1_init+0x148>)
+     b28:	4a47      	ldr	r2, [pc, #284]	; (c48 <spi1_init+0x148>)
+     b2a:	78d2      	ldrb	r2, [r2, #3]
+     b2c:	b2d2      	uxtb	r2, r2
+     b2e:	2110      	movs	r1, #16
+     b30:	430a      	orrs	r2, r1
+     b32:	b2d2      	uxtb	r2, r2
+     b34:	70da      	strb	r2, [r3, #3]
+
+	//Configure SPI1_BR to obtain f_SCK = 4 MHz.
+	//SPI1_BR[SPPR] = 2 (010)
+	//SPI1_BR[SPR] = 1 (0001)
+	SPI1_BR = 0b0100001;
+     b36:	4b44      	ldr	r3, [pc, #272]	; (c48 <spi1_init+0x148>)
+     b38:	2221      	movs	r2, #33	; 0x21
+     b3a:	705a      	strb	r2, [r3, #1]
+
+	//Configure the clock polarity to 0 (low) and clock phase to 0
+	//(rx on first edge, tx on second edge)
+	//SPI1_C1[CPOL] = 0
+	SPI1_C1 &= ~(1 << 3);
+     b3c:	4b42      	ldr	r3, [pc, #264]	; (c48 <spi1_init+0x148>)
+     b3e:	4a42      	ldr	r2, [pc, #264]	; (c48 <spi1_init+0x148>)
+     b40:	78d2      	ldrb	r2, [r2, #3]
+     b42:	b2d2      	uxtb	r2, r2
+     b44:	2108      	movs	r1, #8
+     b46:	438a      	bics	r2, r1
+     b48:	b2d2      	uxtb	r2, r2
+     b4a:	70da      	strb	r2, [r3, #3]
+	//SPI1_C1[CPHA] = 0
+	SPI1_C1 &= ~(1 << 2);
+     b4c:	4b3e      	ldr	r3, [pc, #248]	; (c48 <spi1_init+0x148>)
+     b4e:	4a3e      	ldr	r2, [pc, #248]	; (c48 <spi1_init+0x148>)
+     b50:	78d2      	ldrb	r2, [r2, #3]
+     b52:	b2d2      	uxtb	r2, r2
+     b54:	2104      	movs	r1, #4
+     b56:	438a      	bics	r2, r1
+     b58:	b2d2      	uxtb	r2, r2
+     b5a:	70da      	strb	r2, [r3, #3]
+
+	//Configure 8-bit transfers.
+	//SPI1_C2[SPIMODE] = 0
+	SPI1_C2 &= ~(1 << 6);
+     b5c:	4b3a      	ldr	r3, [pc, #232]	; (c48 <spi1_init+0x148>)
+     b5e:	4a3a      	ldr	r2, [pc, #232]	; (c48 <spi1_init+0x148>)
+     b60:	7892      	ldrb	r2, [r2, #2]
+     b62:	b2d2      	uxtb	r2, r2
+     b64:	2140      	movs	r1, #64	; 0x40
+     b66:	438a      	bics	r2, r1
+     b68:	b2d2      	uxtb	r2, r2
+     b6a:	709a      	strb	r2, [r3, #2]
+
+	//Configure SPI to use the Rx and Tx FIFO's.
+	//SPI_C3[FIFOMODE] = 1
+	SPI1_C3 |= (1 << 0);
+     b6c:	4b36      	ldr	r3, [pc, #216]	; (c48 <spi1_init+0x148>)
+     b6e:	4a36      	ldr	r2, [pc, #216]	; (c48 <spi1_init+0x148>)
+     b70:	7ad2      	ldrb	r2, [r2, #11]
+     b72:	b2d2      	uxtb	r2, r2
+     b74:	2101      	movs	r1, #1
+     b76:	430a      	orrs	r2, r1
+     b78:	b2d2      	uxtb	r2, r2
+     b7a:	72da      	strb	r2, [r3, #11]
+
+	//Configure SPI to send msb first.
+	//SPI1_C1[LSBFE] = 0
+	SPI1_C1 &= ~(1 << 0);
+     b7c:	4b32      	ldr	r3, [pc, #200]	; (c48 <spi1_init+0x148>)
+     b7e:	4a32      	ldr	r2, [pc, #200]	; (c48 <spi1_init+0x148>)
+     b80:	78d2      	ldrb	r2, [r2, #3]
+     b82:	b2d2      	uxtb	r2, r2
+     b84:	2101      	movs	r1, #1
+     b86:	438a      	bics	r2, r1
+     b88:	b2d2      	uxtb	r2, r2
+     b8a:	70da      	strb	r2, [r3, #3]
+
+	//Configure SPI1 to automatically assert and deassert /SS (SPI1_PCS0).
+	//SPI1_C1[SSOE] = 1
+	SPI1_C1 |= (1 << 1);
+     b8c:	4b2e      	ldr	r3, [pc, #184]	; (c48 <spi1_init+0x148>)
+     b8e:	4a2e      	ldr	r2, [pc, #184]	; (c48 <spi1_init+0x148>)
+     b90:	78d2      	ldrb	r2, [r2, #3]
+     b92:	b2d2      	uxtb	r2, r2
+     b94:	2102      	movs	r1, #2
+     b96:	430a      	orrs	r2, r1
+     b98:	b2d2      	uxtb	r2, r2
+     b9a:	70da      	strb	r2, [r3, #3]
+	//SPI1_C2[MODFEN] = 1
+	SPI1_C2 |= (1 << 4);
+     b9c:	4b2a      	ldr	r3, [pc, #168]	; (c48 <spi1_init+0x148>)
+     b9e:	4a2a      	ldr	r2, [pc, #168]	; (c48 <spi1_init+0x148>)
+     ba0:	7892      	ldrb	r2, [r2, #2]
+     ba2:	b2d2      	uxtb	r2, r2
+     ba4:	2110      	movs	r1, #16
+     ba6:	430a      	orrs	r2, r1
+     ba8:	b2d2      	uxtb	r2, r2
+     baa:	709a      	strb	r2, [r3, #2]
+
+	//Disable all interrupts.
+	//SPI1_C1[SPIE] = 0
+	SPI1_C1 &= ~(1 << 7);
+     bac:	4b26      	ldr	r3, [pc, #152]	; (c48 <spi1_init+0x148>)
+     bae:	4a26      	ldr	r2, [pc, #152]	; (c48 <spi1_init+0x148>)
+     bb0:	78d2      	ldrb	r2, [r2, #3]
+     bb2:	b2d1      	uxtb	r1, r2
+     bb4:	227f      	movs	r2, #127	; 0x7f
+     bb6:	400a      	ands	r2, r1
+     bb8:	b2d2      	uxtb	r2, r2
+     bba:	70da      	strb	r2, [r3, #3]
+	//SPI1_C1[SPTIE] = 0
+	SPI1_C1 &= ~(1 << 5);
+     bbc:	4b22      	ldr	r3, [pc, #136]	; (c48 <spi1_init+0x148>)
+     bbe:	4a22      	ldr	r2, [pc, #136]	; (c48 <spi1_init+0x148>)
+     bc0:	78d2      	ldrb	r2, [r2, #3]
+     bc2:	b2d2      	uxtb	r2, r2
+     bc4:	2120      	movs	r1, #32
+     bc6:	438a      	bics	r2, r1
+     bc8:	b2d2      	uxtb	r2, r2
+     bca:	70da      	strb	r2, [r3, #3]
+	//SPI1_C2[SPMIE] = 0
+	SPI1_C2 &= ~(1 << 7);
+     bcc:	4b1e      	ldr	r3, [pc, #120]	; (c48 <spi1_init+0x148>)
+     bce:	4a1e      	ldr	r2, [pc, #120]	; (c48 <spi1_init+0x148>)
+     bd0:	7892      	ldrb	r2, [r2, #2]
+     bd2:	b2d1      	uxtb	r1, r2
+     bd4:	227f      	movs	r2, #127	; 0x7f
+     bd6:	400a      	ands	r2, r1
+     bd8:	b2d2      	uxtb	r2, r2
+     bda:	709a      	strb	r2, [r3, #2]
+	//SPI1_C2[TXDMAE] = 0
+	SPI1_C2 &= ~(1 << 5);
+     bdc:	4b1a      	ldr	r3, [pc, #104]	; (c48 <spi1_init+0x148>)
+     bde:	4a1a      	ldr	r2, [pc, #104]	; (c48 <spi1_init+0x148>)
+     be0:	7892      	ldrb	r2, [r2, #2]
+     be2:	b2d2      	uxtb	r2, r2
+     be4:	2120      	movs	r1, #32
+     be6:	438a      	bics	r2, r1
+     be8:	b2d2      	uxtb	r2, r2
+     bea:	709a      	strb	r2, [r3, #2]
+	//SPI1_C2[RXDMAE] = 0
+	SPI1_C2 &= ~(1 << 2);
+     bec:	4b16      	ldr	r3, [pc, #88]	; (c48 <spi1_init+0x148>)
+     bee:	4a16      	ldr	r2, [pc, #88]	; (c48 <spi1_init+0x148>)
+     bf0:	7892      	ldrb	r2, [r2, #2]
+     bf2:	b2d2      	uxtb	r2, r2
+     bf4:	2104      	movs	r1, #4
+     bf6:	438a      	bics	r2, r1
+     bf8:	b2d2      	uxtb	r2, r2
+     bfa:	709a      	strb	r2, [r3, #2]
+	//SPI1_C3[TNEARIEN] = 0
+	SPI1_C3 &= ~(1 << 2);
+     bfc:	4b12      	ldr	r3, [pc, #72]	; (c48 <spi1_init+0x148>)
+     bfe:	4a12      	ldr	r2, [pc, #72]	; (c48 <spi1_init+0x148>)
+     c00:	7ad2      	ldrb	r2, [r2, #11]
+     c02:	b2d2      	uxtb	r2, r2
+     c04:	2104      	movs	r1, #4
+     c06:	438a      	bics	r2, r1
+     c08:	b2d2      	uxtb	r2, r2
+     c0a:	72da      	strb	r2, [r3, #11]
+	//SPI1_C3[RNFULLIEN] = 0
+	SPI1_C2 &= ~(1 << 1);
+     c0c:	4b0e      	ldr	r3, [pc, #56]	; (c48 <spi1_init+0x148>)
+     c0e:	4a0e      	ldr	r2, [pc, #56]	; (c48 <spi1_init+0x148>)
+     c10:	7892      	ldrb	r2, [r2, #2]
+     c12:	b2d2      	uxtb	r2, r2
+     c14:	2102      	movs	r1, #2
+     c16:	438a      	bics	r2, r1
+     c18:	b2d2      	uxtb	r2, r2
+     c1a:	709a      	strb	r2, [r3, #2]
+
+	//Disable bidirectionality by configuring the MOSI pin to act as the master out pin and not as an input pin.
+	//SPI1_C2[SPC0] = 0
+	SPI1_C2 &= ~(1 << 0);
+     c1c:	4b0a      	ldr	r3, [pc, #40]	; (c48 <spi1_init+0x148>)
+     c1e:	4a0a      	ldr	r2, [pc, #40]	; (c48 <spi1_init+0x148>)
+     c20:	7892      	ldrb	r2, [r2, #2]
+     c22:	b2d2      	uxtb	r2, r2
+     c24:	2101      	movs	r1, #1
+     c26:	438a      	bics	r2, r1
+     c28:	b2d2      	uxtb	r2, r2
+     c2a:	709a      	strb	r2, [r3, #2]
+	//SPI1_C2[BIDROE] = 0
+	SPI1_C2 &= ~(1 << 3);
+     c2c:	4b06      	ldr	r3, [pc, #24]	; (c48 <spi1_init+0x148>)
+     c2e:	4a06      	ldr	r2, [pc, #24]	; (c48 <spi1_init+0x148>)
+     c30:	7892      	ldrb	r2, [r2, #2]
+     c32:	b2d2      	uxtb	r2, r2
+     c34:	2108      	movs	r1, #8
+     c36:	438a      	bics	r2, r1
+     c38:	b2d2      	uxtb	r2, r2
+     c3a:	709a      	strb	r2, [r3, #2]
+
+	//SPI1_C1 = 0x52;
+	//SPI1_C2 = 0x10;
+	//SPI1_BR = 0x21;
+	//SPI1_C3 = 0x01;
+}
+     c3c:	46bd      	mov	sp, r7
+     c3e:	bd80      	pop	{r7, pc}
+     c40:	40047000 	.word	0x40047000
+     c44:	00001034 	.word	0x00001034
+     c48:	40077000 	.word	0x40077000
+
+00000c4c <spi1_tx_byte>:
+
+void spi1_tx_byte(uint8_t data)
+{
+     c4c:	b580      	push	{r7, lr}
+     c4e:	b082      	sub	sp, #8
+     c50:	af00      	add	r7, sp, #0
+     c52:	1c02      	adds	r2, r0, #0
+     c54:	1dfb      	adds	r3, r7, #7
+     c56:	701a      	strb	r2, [r3, #0]
+	//Wait for FIFO to become non-full before writing the next 8-bits
+	while(SPI1_S & SPI_S_TXFULLF_MASK)
+     c58:	46c0      	nop			; (mov r8, r8)
+     c5a:	4b07      	ldr	r3, [pc, #28]	; (c78 <spi1_tx_byte+0x2c>)
+     c5c:	781b      	ldrb	r3, [r3, #0]
+     c5e:	b2db      	uxtb	r3, r3
+     c60:	1c1a      	adds	r2, r3, #0
+     c62:	2302      	movs	r3, #2
+     c64:	4013      	ands	r3, r2
+     c66:	d1f8      	bne.n	c5a <spi1_tx_byte+0xe>
+	{
+		//do nothing
+	}
+
+	//Transfer 8-bits of data.
+	SPI1_DL = data;
+     c68:	4b03      	ldr	r3, [pc, #12]	; (c78 <spi1_tx_byte+0x2c>)
+     c6a:	1dfa      	adds	r2, r7, #7
+     c6c:	7812      	ldrb	r2, [r2, #0]
+     c6e:	719a      	strb	r2, [r3, #6]
+}
+     c70:	46bd      	mov	sp, r7
+     c72:	b002      	add	sp, #8
+     c74:	bd80      	pop	{r7, pc}
+     c76:	46c0      	nop			; (mov r8, r8)
+     c78:	40077000 	.word	0x40077000
+
+00000c7c <port_gpio_config>:
+	g_portc_callback[10] = pushb2_callback;
+}
+*/
+
+void port_gpio_config(uint32_t port, uint32_t pin)
+{
+     c7c:	b580      	push	{r7, lr}
+     c7e:	b082      	sub	sp, #8
+     c80:	af00      	add	r7, sp, #0
+     c82:	6078      	str	r0, [r7, #4]
+     c84:	6039      	str	r1, [r7, #0]
+	PORT_PCR(port, pin) &= ~(0b111) << 8;
+     c86:	687b      	ldr	r3, [r7, #4]
+     c88:	4913      	ldr	r1, [pc, #76]	; (cd8 <port_gpio_config+0x5c>)
+     c8a:	185b      	adds	r3, r3, r1
+     c8c:	029a      	lsls	r2, r3, #10
+     c8e:	683b      	ldr	r3, [r7, #0]
+     c90:	18d3      	adds	r3, r2, r3
+     c92:	009b      	lsls	r3, r3, #2
+     c94:	687a      	ldr	r2, [r7, #4]
+     c96:	4910      	ldr	r1, [pc, #64]	; (cd8 <port_gpio_config+0x5c>)
+     c98:	1852      	adds	r2, r2, r1
+     c9a:	0291      	lsls	r1, r2, #10
+     c9c:	683a      	ldr	r2, [r7, #0]
+     c9e:	188a      	adds	r2, r1, r2
+     ca0:	0092      	lsls	r2, r2, #2
+     ca2:	6812      	ldr	r2, [r2, #0]
+     ca4:	0ad2      	lsrs	r2, r2, #11
+     ca6:	02d2      	lsls	r2, r2, #11
+     ca8:	601a      	str	r2, [r3, #0]
+	PORT_PCR(port, pin) |= 0b001 << 8;
+     caa:	687b      	ldr	r3, [r7, #4]
+     cac:	4a0a      	ldr	r2, [pc, #40]	; (cd8 <port_gpio_config+0x5c>)
+     cae:	189b      	adds	r3, r3, r2
+     cb0:	029a      	lsls	r2, r3, #10
+     cb2:	683b      	ldr	r3, [r7, #0]
+     cb4:	18d3      	adds	r3, r2, r3
+     cb6:	009b      	lsls	r3, r3, #2
+     cb8:	687a      	ldr	r2, [r7, #4]
+     cba:	4907      	ldr	r1, [pc, #28]	; (cd8 <port_gpio_config+0x5c>)
+     cbc:	1852      	adds	r2, r2, r1
+     cbe:	0291      	lsls	r1, r2, #10
+     cc0:	683a      	ldr	r2, [r7, #0]
+     cc2:	188a      	adds	r2, r1, r2
+     cc4:	0092      	lsls	r2, r2, #2
+     cc6:	6812      	ldr	r2, [r2, #0]
+     cc8:	2180      	movs	r1, #128	; 0x80
+     cca:	0049      	lsls	r1, r1, #1
+     ccc:	430a      	orrs	r2, r1
+     cce:	601a      	str	r2, [r3, #0]
+}
+     cd0:	46bd      	mov	sp, r7
+     cd2:	b002      	add	sp, #8
+     cd4:	bd80      	pop	{r7, pc}
+     cd6:	46c0      	nop			; (mov r8, r8)
+     cd8:	00040049 	.word	0x00040049
+
+00000cdc <pit_isr>:
+
+//----------------------------------------------------------------------------------------------------------------------
+// FUNCTION: pit_ist()
+//----------------------------------------------------------------------------------------------------------------------
+void pit_isr()
+{
+     cdc:	b580      	push	{r7, lr}
+     cde:	af00      	add	r7, sp, #0
+    // Check to see if PIT0 interrupts.
+    if (PIT_TFLG0 & 1) {
+     ce0:	4a15      	ldr	r2, [pc, #84]	; (d38 <pit_isr+0x5c>)
+     ce2:	2386      	movs	r3, #134	; 0x86
+     ce4:	005b      	lsls	r3, r3, #1
+     ce6:	58d2      	ldr	r2, [r2, r3]
+     ce8:	2301      	movs	r3, #1
+     cea:	4013      	ands	r3, r2
+     cec:	d011      	beq.n	d12 <pit_isr+0x36>
+        // Clear the interrupt request flag.
+        PIT_TFLG(0) |= 0x00000001;
+     cee:	4a12      	ldr	r2, [pc, #72]	; (d38 <pit_isr+0x5c>)
+     cf0:	4911      	ldr	r1, [pc, #68]	; (d38 <pit_isr+0x5c>)
+     cf2:	2386      	movs	r3, #134	; 0x86
+     cf4:	005b      	lsls	r3, r3, #1
+     cf6:	58cb      	ldr	r3, [r1, r3]
+     cf8:	2101      	movs	r1, #1
+     cfa:	4319      	orrs	r1, r3
+     cfc:	2386      	movs	r3, #134	; 0x86
+     cfe:	005b      	lsls	r3, r3, #1
+     d00:	50d1      	str	r1, [r2, r3]
+
+        // If the user requested a callback, call it.
+        if (g_callbacks[0]) g_callbacks[0]();
+     d02:	4b0e      	ldr	r3, [pc, #56]	; (d3c <pit_isr+0x60>)
+     d04:	681b      	ldr	r3, [r3, #0]
+     d06:	2b00      	cmp	r3, #0
+     d08:	d014      	beq.n	d34 <pit_isr+0x58>
+     d0a:	4b0c      	ldr	r3, [pc, #48]	; (d3c <pit_isr+0x60>)
+     d0c:	681b      	ldr	r3, [r3, #0]
+     d0e:	4798      	blx	r3
+     d10:	e010      	b.n	d34 <pit_isr+0x58>
+    }
+
+    // It was PIT1 that interrupted.
+    else {
+        // Clear the interrupt request flag.
+        PIT_TFLG(1) |= 0x00000001;
+     d12:	4a09      	ldr	r2, [pc, #36]	; (d38 <pit_isr+0x5c>)
+     d14:	4908      	ldr	r1, [pc, #32]	; (d38 <pit_isr+0x5c>)
+     d16:	238e      	movs	r3, #142	; 0x8e
+     d18:	005b      	lsls	r3, r3, #1
+     d1a:	58cb      	ldr	r3, [r1, r3]
+     d1c:	2101      	movs	r1, #1
+     d1e:	4319      	orrs	r1, r3
+     d20:	238e      	movs	r3, #142	; 0x8e
+     d22:	005b      	lsls	r3, r3, #1
+     d24:	50d1      	str	r1, [r2, r3]
+
+        // If the user requested a callback, call it.
+        if (g_callbacks[1]) g_callbacks[1]();
+     d26:	4b05      	ldr	r3, [pc, #20]	; (d3c <pit_isr+0x60>)
+     d28:	685b      	ldr	r3, [r3, #4]
+     d2a:	2b00      	cmp	r3, #0
+     d2c:	d002      	beq.n	d34 <pit_isr+0x58>
+     d2e:	4b03      	ldr	r3, [pc, #12]	; (d3c <pit_isr+0x60>)
+     d30:	685b      	ldr	r3, [r3, #4]
+     d32:	4798      	blx	r3
+    }
+}
+     d34:	46bd      	mov	sp, r7
+     d36:	bd80      	pop	{r7, pc}
+     d38:	40037000 	.word	0x40037000
+     d3c:	1fffe1e0 	.word	0x1fffe1e0
+
+00000d40 <nokia_lcd_init>:
+	    { 0x00, 0x41, 0x41, 0x36, 0x08 }, // 125: }
+	    { 0x02, 0x01, 0x02, 0x04, 0x02 }, // 126: ~
+};
+
+void nokia_lcd_init()
+{
+     d40:	b580      	push	{r7, lr}
+     d42:	b082      	sub	sp, #8
+     d44:	af00      	add	r7, sp, #0
+	//First, we have to reset the PCD8544. This is accomplished by asserting
+	// /RST for at least 100 ns before deasserting it.
+
+	//call a gpio module function which sets the state of this GPIO pin
+	// /RST = low
+	GPIOB_PDOR &= ~(1 << 3);
+     d46:	4b19      	ldr	r3, [pc, #100]	; (dac <nokia_lcd_init+0x6c>)
+     d48:	4a18      	ldr	r2, [pc, #96]	; (dac <nokia_lcd_init+0x6c>)
+     d4a:	6812      	ldr	r2, [r2, #0]
+     d4c:	2108      	movs	r1, #8
+     d4e:	438a      	bics	r2, r1
+     d50:	601a      	str	r2, [r3, #0]
+
+	//kill time for at least 100 ns -- use a for loop
+	for (int i = 0; i < 5; ++i)
+     d52:	2300      	movs	r3, #0
+     d54:	607b      	str	r3, [r7, #4]
+     d56:	e002      	b.n	d5e <nokia_lcd_init+0x1e>
+     d58:	687b      	ldr	r3, [r7, #4]
+     d5a:	3301      	adds	r3, #1
+     d5c:	607b      	str	r3, [r7, #4]
+     d5e:	687b      	ldr	r3, [r7, #4]
+     d60:	2b04      	cmp	r3, #4
+     d62:	ddf9      	ble.n	d58 <nokia_lcd_init+0x18>
+		//do nothing
+	}
+
+	//call a gpio module function which sets the state of this GPIO pin
+	// /RST = high
+	GPIOB_PDOR |= (1 << 3);
+     d64:	4b11      	ldr	r3, [pc, #68]	; (dac <nokia_lcd_init+0x6c>)
+     d66:	4a11      	ldr	r2, [pc, #68]	; (dac <nokia_lcd_init+0x6c>)
+     d68:	6812      	ldr	r2, [r2, #0]
+     d6a:	2108      	movs	r1, #8
+     d6c:	430a      	orrs	r2, r1
+     d6e:	601a      	str	r2, [r3, #0]
+
+	//Send instruction Function Set with PD = 0 (we are not powering down),
+	//V = 0 (selects horizontal addressing), and H = 1 (use extended instructions).
+	//spi1_tx(dc = 0, 0b00100001); 0x21
+	nokia_lcd_tx(nokia_lcd_mode_cmd, 0b00100001);
+     d70:	2000      	movs	r0, #0
+     d72:	2121      	movs	r1, #33	; 0x21
+     d74:	f000 f8c2 	bl	efc <nokia_lcd_tx>
+	//see the discussion of Vop in §8.9 of the data sheet).
+	//The lower the operating voltage, the dimmer the display. For my display, 48 worked well.
+	//If your display is too dim, try 56. You can experiment with different values
+	//but note in the Limiting Values table in §9, VLCD is limited to a maximum of 10 V.
+	//spi1_tx(dc = 0, 0b10110000); 0xB8 = 56, 0xC0 = 64
+	nokia_lcd_tx(nokia_lcd_mode_cmd, 0b11000000);
+     d78:	2000      	movs	r0, #0
+     d7a:	21c0      	movs	r1, #192	; 0xc0
+     d7c:	f000 f8be 	bl	efc <nokia_lcd_tx>
+	//moving than it does at higher temperatures.
+	//0b00 works well at ambient temperature, but just for fun,
+	//you might try putting your evaluation board and LCD in the freezer
+	//for a while to see what happens to the display then.
+	//spi1_tx(dc = 0, 0b00000100); 0x04
+	nokia_lcd_tx(nokia_lcd_mode_cmd, 0b00000100);
+     d80:	2000      	movs	r0, #0
+     d82:	2104      	movs	r1, #4
+     d84:	f000 f8ba 	bl	efc <nokia_lcd_tx>
+
+	//Send instruction Bias System with BS = 0b11 (see §8.8 of the data sheet).
+	//I am not sure what this does, but this is the value that others on the internet have recommended.
+	//spi1_tx(dc = 0, 0b00010011); 0x13
+	nokia_lcd_tx(nokia_lcd_mode_cmd, 0b00010011);
+     d88:	2000      	movs	r0, #0
+     d8a:	2113      	movs	r1, #19
+     d8c:	f000 f8b6 	bl	efc <nokia_lcd_tx>
+
+	//Send instruction Function Set with PD = 0, V = 0, and H = 0 (select basic instructions).
+	//spi1_tx(dc = 0, 0b00100000); 0x20
+	nokia_lcd_tx(nokia_lcd_mode_cmd, 0b00100000);
+     d90:	2000      	movs	r0, #0
+     d92:	2120      	movs	r1, #32
+     d94:	f000 f8b2 	bl	efc <nokia_lcd_tx>
+	//i.e., pixels are drawn dark on a light background.
+	//If D:E = 0b00, the display is blanked, i.e., nothing is displayed.
+	//If D:E = 01, all all pixels are turned on. If D:E = 11, inverse mode
+	//is selected where pixels are drawn light on a dark background.
+	//spi1_tx(dc = 0, 0b00001100); 0x0C
+	nokia_lcd_tx(nokia_lcd_mode_cmd, 0b00001100);
+     d98:	2000      	movs	r0, #0
+     d9a:	210c      	movs	r1, #12
+     d9c:	f000 f8ae 	bl	efc <nokia_lcd_tx>
+
+	// KRB: Let's clear the RAM before returning.
+	nokia_lcd_clr();
+     da0:	f000 f88e 	bl	ec0 <nokia_lcd_clr>
+}
+     da4:	46bd      	mov	sp, r7
+     da6:	b002      	add	sp, #8
+     da8:	bd80      	pop	{r7, pc}
+     daa:	46c0      	nop			; (mov r8, r8)
+     dac:	400ff040 	.word	0x400ff040
+
+00000db0 <nokia_lcd_draw_char>:
+	nokia_lcd_set_xy_char(x, y);
+	nokia_lcd_draw_char(ch);
+}
+
+void nokia_lcd_draw_char(char ch)
+{
+     db0:	b580      	push	{r7, lr}
+     db2:	b084      	sub	sp, #16
+     db4:	af00      	add	r7, sp, #0
+     db6:	1c02      	adds	r2, r0, #0
+     db8:	1dfb      	adds	r3, r7, #7
+     dba:	701a      	strb	r2, [r3, #0]
+	//Draw blank column to the left of the character bitmap
+	nokia_lcd_tx(nokia_lcd_mode_data, 0x00);
+     dbc:	2001      	movs	r0, #1
+     dbe:	2100      	movs	r1, #0
+     dc0:	f000 f89c 	bl	efc <nokia_lcd_tx>
+
+	//Send each column of pixel data to the display.
+	for(uint8_t column = 0; column < 5 ; column++)
+     dc4:	1c3b      	adds	r3, r7, #0
+     dc6:	330f      	adds	r3, #15
+     dc8:	2200      	movs	r2, #0
+     dca:	701a      	strb	r2, [r3, #0]
+     dcc:	e017      	b.n	dfe <nokia_lcd_draw_char+0x4e>
+	{
+		//subtract 32 because ' ' is ASCII 32
+		nokia_lcd_tx(nokia_lcd_mode_data, g_font_table[ch - 32][column]);
+     dce:	1dfb      	adds	r3, r7, #7
+     dd0:	781b      	ldrb	r3, [r3, #0]
+     dd2:	1c1a      	adds	r2, r3, #0
+     dd4:	3a20      	subs	r2, #32
+     dd6:	1c3b      	adds	r3, r7, #0
+     dd8:	330f      	adds	r3, #15
+     dda:	7818      	ldrb	r0, [r3, #0]
+     ddc:	490e      	ldr	r1, [pc, #56]	; (e18 <nokia_lcd_draw_char+0x68>)
+     dde:	1c13      	adds	r3, r2, #0
+     de0:	009b      	lsls	r3, r3, #2
+     de2:	189b      	adds	r3, r3, r2
+     de4:	181b      	adds	r3, r3, r0
+     de6:	5c5b      	ldrb	r3, [r3, r1]
+     de8:	2001      	movs	r0, #1
+     dea:	1c19      	adds	r1, r3, #0
+     dec:	f000 f886 	bl	efc <nokia_lcd_tx>
+{
+	//Draw blank column to the left of the character bitmap
+	nokia_lcd_tx(nokia_lcd_mode_data, 0x00);
+
+	//Send each column of pixel data to the display.
+	for(uint8_t column = 0; column < 5 ; column++)
+     df0:	1c3b      	adds	r3, r7, #0
+     df2:	330f      	adds	r3, #15
+     df4:	1c3a      	adds	r2, r7, #0
+     df6:	320f      	adds	r2, #15
+     df8:	7812      	ldrb	r2, [r2, #0]
+     dfa:	3201      	adds	r2, #1
+     dfc:	701a      	strb	r2, [r3, #0]
+     dfe:	1c3b      	adds	r3, r7, #0
+     e00:	330f      	adds	r3, #15
+     e02:	781b      	ldrb	r3, [r3, #0]
+     e04:	2b04      	cmp	r3, #4
+     e06:	d9e2      	bls.n	dce <nokia_lcd_draw_char+0x1e>
+		//subtract 32 because ' ' is ASCII 32
+		nokia_lcd_tx(nokia_lcd_mode_data, g_font_table[ch - 32][column]);
+	}
+
+	//Draw blank column to the right of the character bitmap
+	nokia_lcd_tx(nokia_lcd_mode_data, 0x00);
+     e08:	2001      	movs	r0, #1
+     e0a:	2100      	movs	r1, #0
+     e0c:	f000 f876 	bl	efc <nokia_lcd_tx>
+}
+     e10:	46bd      	mov	sp, r7
+     e12:	b004      	add	sp, #16
+     e14:	bd80      	pop	{r7, pc}
+     e16:	46c0      	nop			; (mov r8, r8)
+     e18:	1fffe000 	.word	0x1fffe000
+
+00000e1c <nokia_lcd_set_x>:
+		nokia_lcd_set_y_char(y);
+	//}
+}
+
+void nokia_lcd_set_x(uint8_t x)
+{
+     e1c:	b580      	push	{r7, lr}
+     e1e:	b084      	sub	sp, #16
+     e20:	af00      	add	r7, sp, #0
+     e22:	1c02      	adds	r2, r0, #0
+     e24:	1dfb      	adds	r3, r7, #7
+     e26:	701a      	strb	r2, [r3, #0]
+		//instruction set must be selected (by H = 0 in a Function Set instruction).
+
+		//This function assumes that is the case.
+		// KRB: To configure the basic instruction set, need to send 0b0010_0000.
+		// nokia_lcd_tx(nokia_lcd_mode_cmd, 0b00100001);
+        nokia_lcd_tx(nokia_lcd_mode_cmd, 0b00100000);
+     e28:	2000      	movs	r0, #0
+     e2a:	2120      	movs	r1, #32
+     e2c:	f000 f866 	bl	efc <nokia_lcd_tx>
+
+		//spi1_tx(dc = 0, 0b1 || x);
+		int data = 0b1 << 7;
+     e30:	2380      	movs	r3, #128	; 0x80
+     e32:	60fb      	str	r3, [r7, #12]
+		data |= x;
+     e34:	1dfb      	adds	r3, r7, #7
+     e36:	781b      	ldrb	r3, [r3, #0]
+     e38:	68fa      	ldr	r2, [r7, #12]
+     e3a:	4313      	orrs	r3, r2
+     e3c:	60fb      	str	r3, [r7, #12]
+		nokia_lcd_tx(nokia_lcd_mode_cmd, data);
+     e3e:	68fb      	ldr	r3, [r7, #12]
+     e40:	b2db      	uxtb	r3, r3
+     e42:	2000      	movs	r0, #0
+     e44:	1c19      	adds	r1, r3, #0
+     e46:	f000 f859 	bl	efc <nokia_lcd_tx>
+	//}
+}
+     e4a:	46bd      	mov	sp, r7
+     e4c:	b004      	add	sp, #16
+     e4e:	bd80      	pop	{r7, pc}
+
+00000e50 <nokia_lcd_set_y>:
+
+void nokia_lcd_set_y(uint8_t y)
+{
+     e50:	b580      	push	{r7, lr}
+     e52:	b084      	sub	sp, #16
+     e54:	af00      	add	r7, sp, #0
+     e56:	1c02      	adds	r2, r0, #0
+     e58:	1dfb      	adds	r3, r7, #7
+     e5a:	701a      	strb	r2, [r3, #0]
+		//Note: || means bit concatenation. Note also that the basic
+		//instruction set must be selected (by H = 0 in a Function Set instruction).
+		//This function assumes that is the case.
+        // KRB: To configure the basic instruction set, need to send 0b0010_0000.
+        // nokia_lcd_tx(nokia_lcd_mode_cmd, 0b00100001);
+        nokia_lcd_tx(nokia_lcd_mode_cmd, 0b00100000);
+     e5c:	2000      	movs	r0, #0
+     e5e:	2120      	movs	r1, #32
+     e60:	f000 f84c 	bl	efc <nokia_lcd_tx>
+
+		//spi1_tx(dc = 0, 0b01 || y);
+		uint8_t data = 0b01 << 6;
+     e64:	1c3b      	adds	r3, r7, #0
+     e66:	330f      	adds	r3, #15
+     e68:	2240      	movs	r2, #64	; 0x40
+     e6a:	701a      	strb	r2, [r3, #0]
+		data |= y;
+     e6c:	1c3b      	adds	r3, r7, #0
+     e6e:	330f      	adds	r3, #15
+     e70:	1c39      	adds	r1, r7, #0
+     e72:	310f      	adds	r1, #15
+     e74:	1dfa      	adds	r2, r7, #7
+     e76:	7809      	ldrb	r1, [r1, #0]
+     e78:	7812      	ldrb	r2, [r2, #0]
+     e7a:	430a      	orrs	r2, r1
+     e7c:	701a      	strb	r2, [r3, #0]
+		nokia_lcd_tx(nokia_lcd_mode_cmd, data);
+     e7e:	1c3b      	adds	r3, r7, #0
+     e80:	330f      	adds	r3, #15
+     e82:	781b      	ldrb	r3, [r3, #0]
+     e84:	2000      	movs	r0, #0
+     e86:	1c19      	adds	r1, r3, #0
+     e88:	f000 f838 	bl	efc <nokia_lcd_tx>
+	//}
+}
+     e8c:	46bd      	mov	sp, r7
+     e8e:	b004      	add	sp, #16
+     e90:	bd80      	pop	{r7, pc}
+     e92:	46c0      	nop			; (mov r8, r8)
+
+00000e94 <nokia_lcd_set_xy>:
+
+void nokia_lcd_set_xy(uint8_t x, uint8_t y)
+{
+     e94:	b580      	push	{r7, lr}
+     e96:	b082      	sub	sp, #8
+     e98:	af00      	add	r7, sp, #0
+     e9a:	1c0a      	adds	r2, r1, #0
+     e9c:	1dfb      	adds	r3, r7, #7
+     e9e:	1c01      	adds	r1, r0, #0
+     ea0:	7019      	strb	r1, [r3, #0]
+     ea2:	1dbb      	adds	r3, r7, #6
+     ea4:	701a      	strb	r2, [r3, #0]
+	//if((y >= 0 && y <= 5) && (x >= 0 && x <= 83))
+	//{
+		nokia_lcd_set_x(x);
+     ea6:	1dfb      	adds	r3, r7, #7
+     ea8:	781b      	ldrb	r3, [r3, #0]
+     eaa:	1c18      	adds	r0, r3, #0
+     eac:	f7ff ffb6 	bl	e1c <nokia_lcd_set_x>
+
+		// KRB: My pseudocode had a mistake that has since been corrected. We should be calling nokica_lcd_set_y().
+		//nokia_lcd_set_x(y);
+		nokia_lcd_set_y(y);
+     eb0:	1dbb      	adds	r3, r7, #6
+     eb2:	781b      	ldrb	r3, [r3, #0]
+     eb4:	1c18      	adds	r0, r3, #0
+     eb6:	f7ff ffcb 	bl	e50 <nokia_lcd_set_y>
+	//}
+}
+     eba:	46bd      	mov	sp, r7
+     ebc:	b002      	add	sp, #8
+     ebe:	bd80      	pop	{r7, pc}
+
+00000ec0 <nokia_lcd_clr>:
+
+void nokia_lcd_clr()
+{
+     ec0:	b580      	push	{r7, lr}
+     ec2:	b082      	sub	sp, #8
+     ec4:	af00      	add	r7, sp, #0
+	//If we are not sure if the basic instruction set is selected,
+	//then sending Function Set with H = 0 will select it.
+	//spi1_tx(dc = 0, 0b00100000);
+	nokia_lcd_tx(nokia_lcd_mode_cmd, 0b00100000);
+     ec6:	2000      	movs	r0, #0
+     ec8:	2120      	movs	r1, #32
+     eca:	f000 f817 	bl	efc <nokia_lcd_tx>
+
+	//Set the current address to y = bank 0, x = column 0.
+	nokia_lcd_set_xy(0, 0);
+     ece:	2000      	movs	r0, #0
+     ed0:	2100      	movs	r1, #0
+     ed2:	f7ff ffdf 	bl	e94 <nokia_lcd_set_xy>
+
+	//Note that sending data can be done with H = 0 (basic instruction set) or
+	//H = 1 (extended instruction set).
+	//Note also that DC = 1 when sending pixel data.
+	//spi1_tx(dc = 1, 0b00000000);
+	for(uint32_t pix = 0; pix < (6 * 84); pix++)
+     ed6:	2300      	movs	r3, #0
+     ed8:	607b      	str	r3, [r7, #4]
+     eda:	e006      	b.n	eea <nokia_lcd_clr+0x2a>
+	{
+		nokia_lcd_tx(nokia_lcd_mode_data, 0b00000000);
+     edc:	2001      	movs	r0, #1
+     ede:	2100      	movs	r1, #0
+     ee0:	f000 f80c 	bl	efc <nokia_lcd_tx>
+
+	//Note that sending data can be done with H = 0 (basic instruction set) or
+	//H = 1 (extended instruction set).
+	//Note also that DC = 1 when sending pixel data.
+	//spi1_tx(dc = 1, 0b00000000);
+	for(uint32_t pix = 0; pix < (6 * 84); pix++)
+     ee4:	687b      	ldr	r3, [r7, #4]
+     ee6:	3301      	adds	r3, #1
+     ee8:	607b      	str	r3, [r7, #4]
+     eea:	687a      	ldr	r2, [r7, #4]
+     eec:	4b02      	ldr	r3, [pc, #8]	; (ef8 <nokia_lcd_clr+0x38>)
+     eee:	429a      	cmp	r2, r3
+     ef0:	d9f4      	bls.n	edc <nokia_lcd_clr+0x1c>
+	{
+		nokia_lcd_tx(nokia_lcd_mode_data, 0b00000000);
+	}
+}
+     ef2:	46bd      	mov	sp, r7
+     ef4:	b002      	add	sp, #8
+     ef6:	bd80      	pop	{r7, pc}
+     ef8:	000001f7 	.word	0x000001f7
+
+00000efc <nokia_lcd_tx>:
+
+void nokia_lcd_tx(nokia_lcd_mode_t mode, uint8_t data)
+{
+     efc:	b580      	push	{r7, lr}
+     efe:	b082      	sub	sp, #8
+     f00:	af00      	add	r7, sp, #0
+     f02:	1c0a      	adds	r2, r1, #0
+     f04:	1dfb      	adds	r3, r7, #7
+     f06:	1c01      	adds	r1, r0, #0
+     f08:	7019      	strb	r1, [r3, #0]
+     f0a:	1dbb      	adds	r3, r7, #6
+     f0c:	701a      	strb	r2, [r3, #0]
+	 nokia_lcd_cfg_dc(mode);
+     f0e:	1dfb      	adds	r3, r7, #7
+     f10:	781b      	ldrb	r3, [r3, #0]
+     f12:	1c18      	adds	r0, r3, #0
+     f14:	f000 f808 	bl	f28 <nokia_lcd_cfg_dc>
+	 spi1_tx_byte(data);
+     f18:	1dbb      	adds	r3, r7, #6
+     f1a:	781b      	ldrb	r3, [r3, #0]
+     f1c:	1c18      	adds	r0, r3, #0
+     f1e:	f7ff fe95 	bl	c4c <spi1_tx_byte>
+}
+     f22:	46bd      	mov	sp, r7
+     f24:	b002      	add	sp, #8
+     f26:	bd80      	pop	{r7, pc}
+
+00000f28 <nokia_lcd_cfg_dc>:
+
+void nokia_lcd_cfg_dc(nokia_lcd_mode_t mode)
+{
+     f28:	b580      	push	{r7, lr}
+     f2a:	b082      	sub	sp, #8
+     f2c:	af00      	add	r7, sp, #0
+     f2e:	1c02      	adds	r2, r0, #0
+     f30:	1dfb      	adds	r3, r7, #7
+     f32:	701a      	strb	r2, [r3, #0]
+	if(mode == nokia_lcd_mode_cmd)
+     f34:	1dfb      	adds	r3, r7, #7
+     f36:	781b      	ldrb	r3, [r3, #0]
+     f38:	2b00      	cmp	r3, #0
+     f3a:	d106      	bne.n	f4a <nokia_lcd_cfg_dc+0x22>
+	{
+		//call a gpio module function which sets the state of this GPIO pin to low
+		// /DC = 0
+		GPIOC_PDOR &= ~(1 << 2);
+     f3c:	4b07      	ldr	r3, [pc, #28]	; (f5c <nokia_lcd_cfg_dc+0x34>)
+     f3e:	4a07      	ldr	r2, [pc, #28]	; (f5c <nokia_lcd_cfg_dc+0x34>)
+     f40:	6812      	ldr	r2, [r2, #0]
+     f42:	2104      	movs	r1, #4
+     f44:	438a      	bics	r2, r1
+     f46:	601a      	str	r2, [r3, #0]
+     f48:	e005      	b.n	f56 <nokia_lcd_cfg_dc+0x2e>
+
+	else
+	{
+		//call a gpio module function which sets the state of this GPIO pin to high
+		// /DC = 1
+		GPIOC_PDOR |= (1 << 2);
+     f4a:	4b04      	ldr	r3, [pc, #16]	; (f5c <nokia_lcd_cfg_dc+0x34>)
+     f4c:	4a03      	ldr	r2, [pc, #12]	; (f5c <nokia_lcd_cfg_dc+0x34>)
+     f4e:	6812      	ldr	r2, [r2, #0]
+     f50:	2104      	movs	r1, #4
+     f52:	430a      	orrs	r2, r1
+     f54:	601a      	str	r2, [r3, #0]
+	}
+}
+     f56:	46bd      	mov	sp, r7
+     f58:	b002      	add	sp, #8
+     f5a:	bd80      	pop	{r7, pc}
+     f5c:	400ff080 	.word	0x400ff080
+
+00000f60 <hardware_init>:
+#define forever for(;;)
+
+static callback_v_t g_portc_callback[32] = { 0 };
+
+void hardware_init()
+{
+     f60:	b580      	push	{r7, lr}
+     f62:	af00      	add	r7, sp, #0
+	//Enable SIM clock to ports A-E
+	SIM_SCGC5 |= 0b11111 << 9;
+     f64:	4a51      	ldr	r2, [pc, #324]	; (10ac <hardware_init+0x14c>)
+     f66:	4951      	ldr	r1, [pc, #324]	; (10ac <hardware_init+0x14c>)
+     f68:	4b51      	ldr	r3, [pc, #324]	; (10b0 <hardware_init+0x150>)
+     f6a:	58cb      	ldr	r3, [r1, r3]
+     f6c:	21f8      	movs	r1, #248	; 0xf8
+     f6e:	0189      	lsls	r1, r1, #6
+     f70:	4319      	orrs	r1, r3
+     f72:	4b4f      	ldr	r3, [pc, #316]	; (10b0 <hardware_init+0x150>)
+     f74:	50d1      	str	r1, [r2, r3]
+
+	//configure port pins for GPIO
+	port_gpio_config(PORT_B, 3); // /RST
+     f76:	2001      	movs	r0, #1
+     f78:	2103      	movs	r1, #3
+     f7a:	f7ff fe7f 	bl	c7c <port_gpio_config>
+	port_gpio_config(PORT_C, 2); //DC
+     f7e:	2002      	movs	r0, #2
+     f80:	2102      	movs	r1, #2
+     f82:	f7ff fe7b 	bl	c7c <port_gpio_config>
+
+    //Configure pins for output
+	gpiob_pddr_config(3, GPIO_PDDR_OUT);
+     f86:	2003      	movs	r0, #3
+     f88:	2101      	movs	r1, #1
+     f8a:	f000 f9c9 	bl	1320 <gpiob_pddr_config>
+    // KRB: Deassert /RST
+    GPIOB_PDOR |= 1 << 3;
+     f8e:	4b49      	ldr	r3, [pc, #292]	; (10b4 <hardware_init+0x154>)
+     f90:	4a48      	ldr	r2, [pc, #288]	; (10b4 <hardware_init+0x154>)
+     f92:	6812      	ldr	r2, [r2, #0]
+     f94:	2108      	movs	r1, #8
+     f96:	430a      	orrs	r2, r1
+     f98:	601a      	str	r2, [r3, #0]
+	gpioc_pddr_config(2, GPIO_PDDR_OUT);
+     f9a:	2002      	movs	r0, #2
+     f9c:	2101      	movs	r1, #1
+     f9e:	f000 f9e5 	bl	136c <gpioc_pddr_config>
+
+	//Configure pins for SPI1
+	//Configure PTD4 for SPI1_PCS0
+	PORT_PCR(PORT_D, 4) &= 0b000 << 8;
+     fa2:	4b45      	ldr	r3, [pc, #276]	; (10b8 <hardware_init+0x158>)
+     fa4:	681b      	ldr	r3, [r3, #0]
+     fa6:	4b44      	ldr	r3, [pc, #272]	; (10b8 <hardware_init+0x158>)
+     fa8:	2200      	movs	r2, #0
+     faa:	601a      	str	r2, [r3, #0]
+	PORT_PCR(PORT_D, 4) |= 0b010 << 8;
+     fac:	4b42      	ldr	r3, [pc, #264]	; (10b8 <hardware_init+0x158>)
+     fae:	4a42      	ldr	r2, [pc, #264]	; (10b8 <hardware_init+0x158>)
+     fb0:	6812      	ldr	r2, [r2, #0]
+     fb2:	2180      	movs	r1, #128	; 0x80
+     fb4:	0089      	lsls	r1, r1, #2
+     fb6:	430a      	orrs	r2, r1
+     fb8:	601a      	str	r2, [r3, #0]
+	//Configure PTE3 for SPI1_MOSI
+	//PORT_PCR(PORT_E, 3) &= 0b000 << 8;
+	//PORT_PCR(PORT_E, 3) |= 0b101 << 8;
+	
+	//Configure PTE1 for SPI1_MOSI
+	PORT_PCR(PORT_E, 1) &= 0b000 << 8;
+     fba:	4b40      	ldr	r3, [pc, #256]	; (10bc <hardware_init+0x15c>)
+     fbc:	681b      	ldr	r3, [r3, #0]
+     fbe:	4b3f      	ldr	r3, [pc, #252]	; (10bc <hardware_init+0x15c>)
+     fc0:	2200      	movs	r2, #0
+     fc2:	601a      	str	r2, [r3, #0]
+	PORT_PCR(PORT_E, 1) |= 0b010 << 8;
+     fc4:	4b3d      	ldr	r3, [pc, #244]	; (10bc <hardware_init+0x15c>)
+     fc6:	4a3d      	ldr	r2, [pc, #244]	; (10bc <hardware_init+0x15c>)
+     fc8:	6812      	ldr	r2, [r2, #0]
+     fca:	2180      	movs	r1, #128	; 0x80
+     fcc:	0089      	lsls	r1, r1, #2
+     fce:	430a      	orrs	r2, r1
+     fd0:	601a      	str	r2, [r3, #0]
+	//Configure PTE2 for SPI1_SCK
+	//PORT_PCR(PORT_E, 2) &= 0b000 << 8;
+	//PORT_PCR(PORT_E, 2) |= 0b010 << 8;
+	
+	//Configure PTB9 for SPI1_SCK
+	PORT_PCR(PORT_B, 9) &= 0b000 << 8;
+     fd2:	4b3b      	ldr	r3, [pc, #236]	; (10c0 <hardware_init+0x160>)
+     fd4:	681b      	ldr	r3, [r3, #0]
+     fd6:	4b3a      	ldr	r3, [pc, #232]	; (10c0 <hardware_init+0x160>)
+     fd8:	2200      	movs	r2, #0
+     fda:	601a      	str	r2, [r3, #0]
+	PORT_PCR(PORT_B, 9) |= 0b010 << 8;
+     fdc:	4b38      	ldr	r3, [pc, #224]	; (10c0 <hardware_init+0x160>)
+     fde:	4a38      	ldr	r2, [pc, #224]	; (10c0 <hardware_init+0x160>)
+     fe0:	6812      	ldr	r2, [r2, #0]
+     fe2:	2180      	movs	r1, #128	; 0x80
+     fe4:	0089      	lsls	r1, r1, #2
+     fe6:	430a      	orrs	r2, r1
+     fe8:	601a      	str	r2, [r3, #0]
+
+	//Configure PTC1 for TPM0_CH0
+	PORT_PCR(PORT_C, 1) &= 0b000 << 8;
+     fea:	4b36      	ldr	r3, [pc, #216]	; (10c4 <hardware_init+0x164>)
+     fec:	681b      	ldr	r3, [r3, #0]
+     fee:	4b35      	ldr	r3, [pc, #212]	; (10c4 <hardware_init+0x164>)
+     ff0:	2200      	movs	r2, #0
+     ff2:	601a      	str	r2, [r3, #0]
+	PORT_PCR(PORT_C, 1) |= 0b100 << 8;
+     ff4:	4b33      	ldr	r3, [pc, #204]	; (10c4 <hardware_init+0x164>)
+     ff6:	4a33      	ldr	r2, [pc, #204]	; (10c4 <hardware_init+0x164>)
+     ff8:	6812      	ldr	r2, [r2, #0]
+     ffa:	2180      	movs	r1, #128	; 0x80
+     ffc:	00c9      	lsls	r1, r1, #3
+     ffe:	430a      	orrs	r2, r1
+    1000:	601a      	str	r2, [r3, #0]
+
+	//Enable SIM clock to TPM0
+	SIM_SCGC6 &= ~(1 << 24);
+    1002:	4a2a      	ldr	r2, [pc, #168]	; (10ac <hardware_init+0x14c>)
+    1004:	4929      	ldr	r1, [pc, #164]	; (10ac <hardware_init+0x14c>)
+    1006:	4b30      	ldr	r3, [pc, #192]	; (10c8 <hardware_init+0x168>)
+    1008:	58c9      	ldr	r1, [r1, r3]
+    100a:	4b30      	ldr	r3, [pc, #192]	; (10cc <hardware_init+0x16c>)
+    100c:	4019      	ands	r1, r3
+    100e:	4b2e      	ldr	r3, [pc, #184]	; (10c8 <hardware_init+0x168>)
+    1010:	50d1      	str	r1, [r2, r3]
+	SIM_SCGC6 |= (1 << 24);
+    1012:	4a26      	ldr	r2, [pc, #152]	; (10ac <hardware_init+0x14c>)
+    1014:	4925      	ldr	r1, [pc, #148]	; (10ac <hardware_init+0x14c>)
+    1016:	4b2c      	ldr	r3, [pc, #176]	; (10c8 <hardware_init+0x168>)
+    1018:	58cb      	ldr	r3, [r1, r3]
+    101a:	2180      	movs	r1, #128	; 0x80
+    101c:	0449      	lsls	r1, r1, #17
+    101e:	4319      	orrs	r1, r3
+    1020:	4b29      	ldr	r3, [pc, #164]	; (10c8 <hardware_init+0x168>)
+    1022:	50d1      	str	r1, [r2, r3]
+
+    //Initialize TPM0_CH0 for PWM
+	SIM_SOPT2 |= SIM_SOPT2_TPMSRC(0b11);
+    1024:	4a21      	ldr	r2, [pc, #132]	; (10ac <hardware_init+0x14c>)
+    1026:	4921      	ldr	r1, [pc, #132]	; (10ac <hardware_init+0x14c>)
+    1028:	4b29      	ldr	r3, [pc, #164]	; (10d0 <hardware_init+0x170>)
+    102a:	58cb      	ldr	r3, [r1, r3]
+    102c:	21c0      	movs	r1, #192	; 0xc0
+    102e:	0489      	lsls	r1, r1, #18
+    1030:	4319      	orrs	r1, r3
+    1032:	4b27      	ldr	r3, [pc, #156]	; (10d0 <hardware_init+0x170>)
+    1034:	50d1      	str	r1, [r2, r3]
+	// (3) timer overflow interrupts are disabled;
+	// (4) the TPM counter will be an up counter;
+	// (5) the prescale divider value is 2^2; this makes the TPM clock
+	// period 1 us.
+
+	TPM0_SC = 0x00000002;
+    1036:	4b27      	ldr	r3, [pc, #156]	; (10d4 <hardware_init+0x174>)
+    1038:	2202      	movs	r2, #2
+    103a:	601a      	str	r2, [r3, #0]
+	TPM0_CONF = 0;
+    103c:	4a25      	ldr	r2, [pc, #148]	; (10d4 <hardware_init+0x174>)
+    103e:	2384      	movs	r3, #132	; 0x84
+    1040:	2100      	movs	r1, #0
+    1042:	50d1      	str	r1, [r2, r3]
+	TPM0_CONF |= (0b11 << 6);
+    1044:	4a23      	ldr	r2, [pc, #140]	; (10d4 <hardware_init+0x174>)
+    1046:	4923      	ldr	r1, [pc, #140]	; (10d4 <hardware_init+0x174>)
+    1048:	2384      	movs	r3, #132	; 0x84
+    104a:	58cb      	ldr	r3, [r1, r3]
+    104c:	21c0      	movs	r1, #192	; 0xc0
+    104e:	4319      	orrs	r1, r3
+    1050:	2384      	movs	r3, #132	; 0x84
+    1052:	50d1      	str	r1, [r2, r3]
+	TPM0_CNT = 0;
+    1054:	4b1f      	ldr	r3, [pc, #124]	; (10d4 <hardware_init+0x174>)
+    1056:	2200      	movs	r2, #0
+    1058:	605a      	str	r2, [r3, #4]
+	TPM0_C0SC = 0b00101100;
+    105a:	4b1e      	ldr	r3, [pc, #120]	; (10d4 <hardware_init+0x174>)
+    105c:	222c      	movs	r2, #44	; 0x2c
+    105e:	60da      	str	r2, [r3, #12]
+	TPM0_MOD = 10 - 1; //Set for 10 us (100 Hz)
+    1060:	4b1c      	ldr	r3, [pc, #112]	; (10d4 <hardware_init+0x174>)
+    1062:	2209      	movs	r2, #9
+    1064:	609a      	str	r2, [r3, #8]
+	TPM0_C0V = (10 * 50) / 100;	//Set for 50% duty cycle
+    1066:	4b1b      	ldr	r3, [pc, #108]	; (10d4 <hardware_init+0x174>)
+    1068:	2205      	movs	r2, #5
+    106a:	611a      	str	r2, [r3, #16]
+
+	//Initialize SPI1
+	spi1_init();
+    106c:	f7ff fd48 	bl	b00 <spi1_init>
+
+	//Initialize screen
+	nokia_lcd_init();
+    1070:	f7ff fe66 	bl	d40 <nokia_lcd_init>
+
+
+	//Configure interrupts
+	int_init(int_src_portscd, int_priority_3, int_state_enabled);
+    1074:	201f      	movs	r0, #31
+    1076:	21c0      	movs	r1, #192	; 0xc0
+    1078:	2201      	movs	r2, #1
+    107a:	f000 f935 	bl	12e8 <int_init>
+	//(4) DSE = x since the pin is being configured as an input pin it does not matter what DSE is; 
+	//(5) PFE = 0 to disable the internal passive filter; 
+	//(6) SRE = 0 to select fast slew rate; 
+	//(7) PE = 1 to enable the internal pullup or pulldown resistor;
+	//(8) PS = 1 to enable the internal pullup resistor
+	PORT_PCR(PORT_C, 3) = 0x010A0103;
+    107e:	4b16      	ldr	r3, [pc, #88]	; (10d8 <hardware_init+0x178>)
+    1080:	4a16      	ldr	r2, [pc, #88]	; (10dc <hardware_init+0x17c>)
+    1082:	601a      	str	r2, [r3, #0]
+	PORT_PCR(PORT_C, 12) = 0x010A0103;
+    1084:	4b16      	ldr	r3, [pc, #88]	; (10e0 <hardware_init+0x180>)
+    1086:	4a15      	ldr	r2, [pc, #84]	; (10dc <hardware_init+0x17c>)
+    1088:	601a      	str	r2, [r3, #0]
+	
+	gpioc_pddr_config(3, GPIO_PDDR_IN);
+    108a:	2003      	movs	r0, #3
+    108c:	2100      	movs	r1, #0
+    108e:	f000 f96d 	bl	136c <gpioc_pddr_config>
+	gpioc_pddr_config(12, GPIO_PDDR_IN);
+    1092:	200c      	movs	r0, #12
+    1094:	2100      	movs	r1, #0
+    1096:	f000 f969 	bl	136c <gpioc_pddr_config>
+	
+	//Enable TPM0
+	TPM0_SC |= (0b01 << 3);
+    109a:	4b0e      	ldr	r3, [pc, #56]	; (10d4 <hardware_init+0x174>)
+    109c:	4a0d      	ldr	r2, [pc, #52]	; (10d4 <hardware_init+0x174>)
+    109e:	6812      	ldr	r2, [r2, #0]
+    10a0:	2108      	movs	r1, #8
+    10a2:	430a      	orrs	r2, r1
+    10a4:	601a      	str	r2, [r3, #0]
+
+
+}
+    10a6:	46bd      	mov	sp, r7
+    10a8:	bd80      	pop	{r7, pc}
+    10aa:	46c0      	nop			; (mov r8, r8)
+    10ac:	40047000 	.word	0x40047000
+    10b0:	00001038 	.word	0x00001038
+    10b4:	400ff040 	.word	0x400ff040
+    10b8:	4004c010 	.word	0x4004c010
+    10bc:	4004d004 	.word	0x4004d004
+    10c0:	4004a024 	.word	0x4004a024
+    10c4:	4004b004 	.word	0x4004b004
+    10c8:	0000103c 	.word	0x0000103c
+    10cc:	feffffff 	.word	0xfeffffff
+    10d0:	00001004 	.word	0x00001004
+    10d4:	40038000 	.word	0x40038000
+    10d8:	4004b00c 	.word	0x4004b00c
+    10dc:	010a0103 	.word	0x010a0103
+    10e0:	4004b030 	.word	0x4004b030
+
+000010e4 <sw_init>:
+
+void sw_init()
+{
+    10e4:	b580      	push	{r7, lr}
+    10e6:	af00      	add	r7, sp, #0
+	g_portc_callback[3] = print_charset1;
+    10e8:	4b03      	ldr	r3, [pc, #12]	; (10f8 <sw_init+0x14>)
+    10ea:	4a04      	ldr	r2, [pc, #16]	; (10fc <sw_init+0x18>)
+    10ec:	60da      	str	r2, [r3, #12]
+	g_portc_callback[12] = print_charset2;
+    10ee:	4b02      	ldr	r3, [pc, #8]	; (10f8 <sw_init+0x14>)
+    10f0:	4a03      	ldr	r2, [pc, #12]	; (1100 <sw_init+0x1c>)
+    10f2:	631a      	str	r2, [r3, #48]	; 0x30
+}
+    10f4:	46bd      	mov	sp, r7
+    10f6:	bd80      	pop	{r7, pc}
+    10f8:	1fffe1e8 	.word	0x1fffe1e8
+    10fc:	000013b9 	.word	0x000013b9
+    1100:	000013e5 	.word	0x000013e5
+
+00001104 <pushb_portc_debounce>:
+
+void pushb_portc_debounce(int p_pin)
+{
+    1104:	b580      	push	{r7, lr}
+    1106:	b084      	sub	sp, #16
+    1108:	af00      	add	r7, sp, #0
+    110a:	6078      	str	r0, [r7, #4]
+    uint32_t signal = 1;
+    110c:	2301      	movs	r3, #1
+    110e:	60fb      	str	r3, [r7, #12]
+    uint16_t state = 0x0000;
+    1110:	1c3b      	adds	r3, r7, #0
+    1112:	330a      	adds	r3, #10
+    1114:	2200      	movs	r2, #0
+    1116:	801a      	strh	r2, [r3, #0]
+    do 
+    {
+        state = (state << 1) | signal | 0xE000;
+    1118:	1c3b      	adds	r3, r7, #0
+    111a:	330a      	adds	r3, #10
+    111c:	881b      	ldrh	r3, [r3, #0]
+    111e:	005b      	lsls	r3, r3, #1
+    1120:	b29a      	uxth	r2, r3
+    1122:	68fb      	ldr	r3, [r7, #12]
+    1124:	b29b      	uxth	r3, r3
+    1126:	4313      	orrs	r3, r2
+    1128:	b29a      	uxth	r2, r3
+    112a:	1c3b      	adds	r3, r7, #0
+    112c:	330a      	adds	r3, #10
+    112e:	490a      	ldr	r1, [pc, #40]	; (1158 <pushb_portc_debounce+0x54>)
+    1130:	430a      	orrs	r2, r1
+    1132:	801a      	strh	r2, [r3, #0]
+        signal = (~GPIOC_PDIR >> p_pin) & 0x01;
+    1134:	4b09      	ldr	r3, [pc, #36]	; (115c <pushb_portc_debounce+0x58>)
+    1136:	691b      	ldr	r3, [r3, #16]
+    1138:	43da      	mvns	r2, r3
+    113a:	687b      	ldr	r3, [r7, #4]
+    113c:	40da      	lsrs	r2, r3
+    113e:	2301      	movs	r3, #1
+    1140:	4013      	ands	r3, r2
+    1142:	60fb      	str	r3, [r7, #12]
+    } 
+    while (state != 0xF000);
+    1144:	1c3b      	adds	r3, r7, #0
+    1146:	330a      	adds	r3, #10
+    1148:	881a      	ldrh	r2, [r3, #0]
+    114a:	23f0      	movs	r3, #240	; 0xf0
+    114c:	021b      	lsls	r3, r3, #8
+    114e:	429a      	cmp	r2, r3
+    1150:	d1e2      	bne.n	1118 <pushb_portc_debounce+0x14>
+}
+    1152:	46bd      	mov	sp, r7
+    1154:	b004      	add	sp, #16
+    1156:	bd80      	pop	{r7, pc}
+    1158:	ffffe000 	.word	0xffffe000
+    115c:	400ff080 	.word	0x400ff080
+
+00001160 <portscd_isr>:
+
+void portscd_isr()
+{
+    1160:	b580      	push	{r7, lr}
+    1162:	af00      	add	r7, sp, #0
+    // Check PTC3
+    if (PORTC_ISFR & 0x00000008) 
+    1164:	4a1a      	ldr	r2, [pc, #104]	; (11d0 <portscd_isr+0x70>)
+    1166:	23a0      	movs	r3, #160	; 0xa0
+    1168:	58d2      	ldr	r2, [r2, r3]
+    116a:	2308      	movs	r3, #8
+    116c:	4013      	ands	r3, r2
+    116e:	d012      	beq.n	1196 <portscd_isr+0x36>
+    {
+        // Debounce before clearing the interrupt request flag. This will eliminate multiple invocations of this
+        // ISR due to the switch bouncing up and down.
+        pushb_portc_debounce(3);
+    1170:	2003      	movs	r0, #3
+    1172:	f7ff ffc7 	bl	1104 <pushb_portc_debounce>
+        PORTC_ISFR |= 0x00000008;
+    1176:	4a16      	ldr	r2, [pc, #88]	; (11d0 <portscd_isr+0x70>)
+    1178:	4915      	ldr	r1, [pc, #84]	; (11d0 <portscd_isr+0x70>)
+    117a:	23a0      	movs	r3, #160	; 0xa0
+    117c:	58cb      	ldr	r3, [r1, r3]
+    117e:	2108      	movs	r1, #8
+    1180:	4319      	orrs	r1, r3
+    1182:	23a0      	movs	r3, #160	; 0xa0
+    1184:	50d1      	str	r1, [r2, r3]
+        if (g_portc_callback[3]) 
+    1186:	4b13      	ldr	r3, [pc, #76]	; (11d4 <portscd_isr+0x74>)
+    1188:	68db      	ldr	r3, [r3, #12]
+    118a:	2b00      	cmp	r3, #0
+    118c:	d01d      	beq.n	11ca <portscd_isr+0x6a>
+        {
+        	g_portc_callback[3]();
+    118e:	4b11      	ldr	r3, [pc, #68]	; (11d4 <portscd_isr+0x74>)
+    1190:	68db      	ldr	r3, [r3, #12]
+    1192:	4798      	blx	r3
+    1194:	e019      	b.n	11ca <portscd_isr+0x6a>
+        }
+    }
+    
+    // Check PTC12
+    else if (PORTC_ISFR & 0x00001000) 
+    1196:	4a0e      	ldr	r2, [pc, #56]	; (11d0 <portscd_isr+0x70>)
+    1198:	23a0      	movs	r3, #160	; 0xa0
+    119a:	58d2      	ldr	r2, [r2, r3]
+    119c:	2380      	movs	r3, #128	; 0x80
+    119e:	015b      	lsls	r3, r3, #5
+    11a0:	4013      	ands	r3, r2
+    11a2:	d012      	beq.n	11ca <portscd_isr+0x6a>
+    {
+        // Debounce before clearing the interrupt request flag. This will eliminate multiple invocations of this
+        // ISR due to the switch bouncing up and down.
+        pushb_portc_debounce(12);
+    11a4:	200c      	movs	r0, #12
+    11a6:	f7ff ffad 	bl	1104 <pushb_portc_debounce>
+        PORTC_ISFR |= 0x00001000;
+    11aa:	4a09      	ldr	r2, [pc, #36]	; (11d0 <portscd_isr+0x70>)
+    11ac:	4908      	ldr	r1, [pc, #32]	; (11d0 <portscd_isr+0x70>)
+    11ae:	23a0      	movs	r3, #160	; 0xa0
+    11b0:	58cb      	ldr	r3, [r1, r3]
+    11b2:	2180      	movs	r1, #128	; 0x80
+    11b4:	0149      	lsls	r1, r1, #5
+    11b6:	4319      	orrs	r1, r3
+    11b8:	23a0      	movs	r3, #160	; 0xa0
+    11ba:	50d1      	str	r1, [r2, r3]
+        if (g_portc_callback[12])
+    11bc:	4b05      	ldr	r3, [pc, #20]	; (11d4 <portscd_isr+0x74>)
+    11be:	6b1b      	ldr	r3, [r3, #48]	; 0x30
+    11c0:	2b00      	cmp	r3, #0
+    11c2:	d002      	beq.n	11ca <portscd_isr+0x6a>
+        {
+        	g_portc_callback[12]();
+    11c4:	4b03      	ldr	r3, [pc, #12]	; (11d4 <portscd_isr+0x74>)
+    11c6:	6b1b      	ldr	r3, [r3, #48]	; 0x30
+    11c8:	4798      	blx	r3
+        }
+    }
+}
+    11ca:	46bd      	mov	sp, r7
+    11cc:	bd80      	pop	{r7, pc}
+    11ce:	46c0      	nop			; (mov r8, r8)
+    11d0:	4004b000 	.word	0x4004b000
+    11d4:	1fffe1e8 	.word	0x1fffe1e8
+
+000011d8 <run>:
+
+void run()
+{
+    11d8:	b580      	push	{r7, lr}
+    11da:	af00      	add	r7, sp, #0
+	{
+		nokia_lcd_draw_char((char) ch);
+	}
+	*/
+	
+	nokia_lcd_draw_char('S');
+    11dc:	2053      	movs	r0, #83	; 0x53
+    11de:	f7ff fde7 	bl	db0 <nokia_lcd_draw_char>
+	nokia_lcd_draw_char('T');
+    11e2:	2054      	movs	r0, #84	; 0x54
+    11e4:	f7ff fde4 	bl	db0 <nokia_lcd_draw_char>
+	nokia_lcd_draw_char('A');
+    11e8:	2041      	movs	r0, #65	; 0x41
+    11ea:	f7ff fde1 	bl	db0 <nokia_lcd_draw_char>
+	nokia_lcd_draw_char('R');
+    11ee:	2052      	movs	r0, #82	; 0x52
+    11f0:	f7ff fdde 	bl	db0 <nokia_lcd_draw_char>
+	nokia_lcd_draw_char('T');
+    11f4:	2054      	movs	r0, #84	; 0x54
+    11f6:	f7ff fddb 	bl	db0 <nokia_lcd_draw_char>
+	nokia_lcd_draw_char('U');
+    11fa:	2055      	movs	r0, #85	; 0x55
+    11fc:	f7ff fdd8 	bl	db0 <nokia_lcd_draw_char>
+	nokia_lcd_draw_char('P');
+    1200:	2050      	movs	r0, #80	; 0x50
+    1202:	f7ff fdd5 	bl	db0 <nokia_lcd_draw_char>
+    forever
+    {
+    	
+    	
+    	
+    }
+    1206:	e7fe      	b.n	1206 <run+0x2e>
+
+00001208 <main>:
+}
+
+int main()
+{
+    1208:	b580      	push	{r7, lr}
+    120a:	af00      	add	r7, sp, #0
+    hardware_init();
+    120c:	f7ff fea8 	bl	f60 <hardware_init>
+    sw_init();
+    1210:	f7ff ff68 	bl	10e4 <sw_init>
+    run();
+    1214:	f7ff ffe0 	bl	11d8 <run>
+    return 0;
+    1218:	2300      	movs	r3, #0
+}
+    121a:	1c18      	adds	r0, r3, #0
+    121c:	46bd      	mov	sp, r7
+    121e:	bd80      	pop	{r7, pc}
+
+00001220 <int_cfg_priority>:
+
+//----------------------------------------------------------------------------------------------------------------------
+// FUNCTION: int_cfg_priority()
+//----------------------------------------------------------------------------------------------------------------------
+void int_cfg_priority(int_src_t p_src, int_priority_t p_priority)
+{
+    1220:	b580      	push	{r7, lr}
+    1222:	b086      	sub	sp, #24
+    1224:	af00      	add	r7, sp, #0
+    1226:	1c0a      	adds	r2, r1, #0
+    1228:	1dfb      	adds	r3, r7, #7
+    122a:	1c01      	adds	r1, r0, #0
+    122c:	7019      	strb	r1, [r3, #0]
+    122e:	1dbb      	adds	r3, r7, #6
+    1230:	701a      	strb	r2, [r3, #0]
+    int ipr_reg_num = p_src >> 2;               // ipr_reg_num is number of the NVIC_IPR register
+    1232:	1dfb      	adds	r3, r7, #7
+    1234:	781b      	ldrb	r3, [r3, #0]
+    1236:	089b      	lsrs	r3, r3, #2
+    1238:	b2db      	uxtb	r3, r3
+    123a:	617b      	str	r3, [r7, #20]
+    int bit_pos = (p_src % 4) << 3;             // bit_pos is the least-significant bit of the proper PRI_xx field
+    123c:	1dfb      	adds	r3, r7, #7
+    123e:	781a      	ldrb	r2, [r3, #0]
+    1240:	2303      	movs	r3, #3
+    1242:	4013      	ands	r3, r2
+    1244:	00db      	lsls	r3, r3, #3
+    1246:	613b      	str	r3, [r7, #16]
+    uint32_t nvic_iprn = NVIC_IP(ipr_reg_num);  // nvic_iprn is the current value of NVIC_IPR<ipr_reg_num>
+    1248:	4b10      	ldr	r3, [pc, #64]	; (128c <int_cfg_priority+0x6c>)
+    124a:	697a      	ldr	r2, [r7, #20]
+    124c:	32c0      	adds	r2, #192	; 0xc0
+    124e:	0092      	lsls	r2, r2, #2
+    1250:	58d3      	ldr	r3, [r2, r3]
+    1252:	60fb      	str	r3, [r7, #12]
+    nvic_iprn &= ~(0b11111111 << bit_pos);      // Clear the PRI_xx field
+    1254:	22ff      	movs	r2, #255	; 0xff
+    1256:	693b      	ldr	r3, [r7, #16]
+    1258:	1c11      	adds	r1, r2, #0
+    125a:	4099      	lsls	r1, r3
+    125c:	1c0b      	adds	r3, r1, #0
+    125e:	43db      	mvns	r3, r3
+    1260:	1c1a      	adds	r2, r3, #0
+    1262:	68fb      	ldr	r3, [r7, #12]
+    1264:	4013      	ands	r3, r2
+    1266:	60fb      	str	r3, [r7, #12]
+    nvic_iprn |= p_priority << bit_pos;         // Write the priority into the PRI_xx field
+    1268:	1dbb      	adds	r3, r7, #6
+    126a:	781a      	ldrb	r2, [r3, #0]
+    126c:	693b      	ldr	r3, [r7, #16]
+    126e:	1c11      	adds	r1, r2, #0
+    1270:	4099      	lsls	r1, r3
+    1272:	1c0b      	adds	r3, r1, #0
+    1274:	68fa      	ldr	r2, [r7, #12]
+    1276:	4313      	orrs	r3, r2
+    1278:	60fb      	str	r3, [r7, #12]
+    NVIC_IP(ipr_reg_num) = nvic_iprn;           // Update NVIC_IPR<ipr_reg_num>
+    127a:	4b04      	ldr	r3, [pc, #16]	; (128c <int_cfg_priority+0x6c>)
+    127c:	697a      	ldr	r2, [r7, #20]
+    127e:	32c0      	adds	r2, #192	; 0xc0
+    1280:	0092      	lsls	r2, r2, #2
+    1282:	68f9      	ldr	r1, [r7, #12]
+    1284:	50d1      	str	r1, [r2, r3]
+}
+    1286:	46bd      	mov	sp, r7
+    1288:	b006      	add	sp, #24
+    128a:	bd80      	pop	{r7, pc}
+    128c:	e000e100 	.word	0xe000e100
+
+00001290 <int_cfg_state>:
+
+//----------------------------------------------------------------------------------------------------------------------
+// FUNCTION: int_cfg_state()
+//----------------------------------------------------------------------------------------------------------------------
+void int_cfg_state(int_src_t p_src, int_state_t p_state)
+{
+    1290:	b590      	push	{r4, r7, lr}
+    1292:	b083      	sub	sp, #12
+    1294:	af00      	add	r7, sp, #0
+    1296:	1c0a      	adds	r2, r1, #0
+    1298:	1dfb      	adds	r3, r7, #7
+    129a:	1c01      	adds	r1, r0, #0
+    129c:	7019      	strb	r1, [r3, #0]
+    129e:	1dbb      	adds	r3, r7, #6
+    12a0:	701a      	strb	r2, [r3, #0]
+    if (p_state == int_state_enabled) {
+    12a2:	1dbb      	adds	r3, r7, #6
+    12a4:	781b      	ldrb	r3, [r3, #0]
+    12a6:	2b01      	cmp	r3, #1
+    12a8:	d10b      	bne.n	12c2 <int_cfg_state+0x32>
+        NVIC_ISER |= 1 << p_src;
+    12aa:	4b0e      	ldr	r3, [pc, #56]	; (12e4 <int_cfg_state+0x54>)
+    12ac:	4a0d      	ldr	r2, [pc, #52]	; (12e4 <int_cfg_state+0x54>)
+    12ae:	6811      	ldr	r1, [r2, #0]
+    12b0:	1dfa      	adds	r2, r7, #7
+    12b2:	7812      	ldrb	r2, [r2, #0]
+    12b4:	2001      	movs	r0, #1
+    12b6:	1c04      	adds	r4, r0, #0
+    12b8:	4094      	lsls	r4, r2
+    12ba:	1c22      	adds	r2, r4, #0
+    12bc:	430a      	orrs	r2, r1
+    12be:	601a      	str	r2, [r3, #0]
+    12c0:	e00c      	b.n	12dc <int_cfg_state+0x4c>
+    } else {
+        NVIC_ICER |= 1 << p_src;
+    12c2:	4a08      	ldr	r2, [pc, #32]	; (12e4 <int_cfg_state+0x54>)
+    12c4:	4907      	ldr	r1, [pc, #28]	; (12e4 <int_cfg_state+0x54>)
+    12c6:	2380      	movs	r3, #128	; 0x80
+    12c8:	58c9      	ldr	r1, [r1, r3]
+    12ca:	1dfb      	adds	r3, r7, #7
+    12cc:	781b      	ldrb	r3, [r3, #0]
+    12ce:	2001      	movs	r0, #1
+    12d0:	1c04      	adds	r4, r0, #0
+    12d2:	409c      	lsls	r4, r3
+    12d4:	1c23      	adds	r3, r4, #0
+    12d6:	4319      	orrs	r1, r3
+    12d8:	2380      	movs	r3, #128	; 0x80
+    12da:	50d1      	str	r1, [r2, r3]
+    }
+}
+    12dc:	46bd      	mov	sp, r7
+    12de:	b003      	add	sp, #12
+    12e0:	bd90      	pop	{r4, r7, pc}
+    12e2:	46c0      	nop			; (mov r8, r8)
+    12e4:	e000e100 	.word	0xe000e100
+
+000012e8 <int_init>:
+
+//----------------------------------------------------------------------------------------------------------------------
+// FUNCTION: int_init()
+//----------------------------------------------------------------------------------------------------------------------
+void int_init(int_src_t p_src, int_priority_t p_priority, int_state_t p_state)
+{
+    12e8:	b580      	push	{r7, lr}
+    12ea:	b082      	sub	sp, #8
+    12ec:	af00      	add	r7, sp, #0
+    12ee:	1dfb      	adds	r3, r7, #7
+    12f0:	7018      	strb	r0, [r3, #0]
+    12f2:	1dbb      	adds	r3, r7, #6
+    12f4:	7019      	strb	r1, [r3, #0]
+    12f6:	1d7b      	adds	r3, r7, #5
+    12f8:	701a      	strb	r2, [r3, #0]
+    int_cfg_priority(p_src, p_priority);   // Configure the priority
+    12fa:	1dfb      	adds	r3, r7, #7
+    12fc:	781a      	ldrb	r2, [r3, #0]
+    12fe:	1dbb      	adds	r3, r7, #6
+    1300:	781b      	ldrb	r3, [r3, #0]
+    1302:	1c10      	adds	r0, r2, #0
+    1304:	1c19      	adds	r1, r3, #0
+    1306:	f7ff ff8b 	bl	1220 <int_cfg_priority>
+    int_cfg_state(p_src, p_state);         // Configure the state to be enabled or disabled
+    130a:	1dfb      	adds	r3, r7, #7
+    130c:	781a      	ldrb	r2, [r3, #0]
+    130e:	1d7b      	adds	r3, r7, #5
+    1310:	781b      	ldrb	r3, [r3, #0]
+    1312:	1c10      	adds	r0, r2, #0
+    1314:	1c19      	adds	r1, r3, #0
+    1316:	f7ff ffbb 	bl	1290 <int_cfg_state>
+}
+    131a:	46bd      	mov	sp, r7
+    131c:	b002      	add	sp, #8
+    131e:	bd80      	pop	{r7, pc}
+
+00001320 <gpiob_pddr_config>:
+	}
+}
+
+//configures PORT B GPIO pins for input or output
+void gpiob_pddr_config(uint32_t pin, uint32_t direction)
+{
+    1320:	b590      	push	{r4, r7, lr}
+    1322:	b083      	sub	sp, #12
+    1324:	af00      	add	r7, sp, #0
+    1326:	6078      	str	r0, [r7, #4]
+    1328:	6039      	str	r1, [r7, #0]
+	//if direction is input (GPIO_PDDR_IN)
+	if(direction == 0)
+    132a:	683b      	ldr	r3, [r7, #0]
+    132c:	2b00      	cmp	r3, #0
+    132e:	d10b      	bne.n	1348 <gpiob_pddr_config+0x28>
+	{
+		GPIOB_PDDR &= ~(1 << pin);
+    1330:	4b0d      	ldr	r3, [pc, #52]	; (1368 <gpiob_pddr_config+0x48>)
+    1332:	4a0d      	ldr	r2, [pc, #52]	; (1368 <gpiob_pddr_config+0x48>)
+    1334:	6952      	ldr	r2, [r2, #20]
+    1336:	6879      	ldr	r1, [r7, #4]
+    1338:	2001      	movs	r0, #1
+    133a:	1c04      	adds	r4, r0, #0
+    133c:	408c      	lsls	r4, r1
+    133e:	1c21      	adds	r1, r4, #0
+    1340:	43c9      	mvns	r1, r1
+    1342:	400a      	ands	r2, r1
+    1344:	615a      	str	r2, [r3, #20]
+    1346:	e00c      	b.n	1362 <gpiob_pddr_config+0x42>
+	}
+	//if direction is output (GPIO_PDDR_OUT)
+	else if(direction == 1)
+    1348:	683b      	ldr	r3, [r7, #0]
+    134a:	2b01      	cmp	r3, #1
+    134c:	d109      	bne.n	1362 <gpiob_pddr_config+0x42>
+	{
+		GPIOB_PDDR |= (1 << pin);
+    134e:	4b06      	ldr	r3, [pc, #24]	; (1368 <gpiob_pddr_config+0x48>)
+    1350:	4a05      	ldr	r2, [pc, #20]	; (1368 <gpiob_pddr_config+0x48>)
+    1352:	6951      	ldr	r1, [r2, #20]
+    1354:	687a      	ldr	r2, [r7, #4]
+    1356:	2001      	movs	r0, #1
+    1358:	1c04      	adds	r4, r0, #0
+    135a:	4094      	lsls	r4, r2
+    135c:	1c22      	adds	r2, r4, #0
+    135e:	430a      	orrs	r2, r1
+    1360:	615a      	str	r2, [r3, #20]
+	}
+}
+    1362:	46bd      	mov	sp, r7
+    1364:	b003      	add	sp, #12
+    1366:	bd90      	pop	{r4, r7, pc}
+    1368:	400ff040 	.word	0x400ff040
+
+0000136c <gpioc_pddr_config>:
+
+//configures PORT D GPIO pins for input or output
+void gpioc_pddr_config(uint32_t pin, uint32_t direction)
+{
+    136c:	b590      	push	{r4, r7, lr}
+    136e:	b083      	sub	sp, #12
+    1370:	af00      	add	r7, sp, #0
+    1372:	6078      	str	r0, [r7, #4]
+    1374:	6039      	str	r1, [r7, #0]
+	//if direction is input (GPIO_PDDR_IN)
+	if(direction == 0)
+    1376:	683b      	ldr	r3, [r7, #0]
+    1378:	2b00      	cmp	r3, #0
+    137a:	d10b      	bne.n	1394 <gpioc_pddr_config+0x28>
+	{
+		GPIOC_PDDR &= ~(1 << pin);
+    137c:	4b0d      	ldr	r3, [pc, #52]	; (13b4 <gpioc_pddr_config+0x48>)
+    137e:	4a0d      	ldr	r2, [pc, #52]	; (13b4 <gpioc_pddr_config+0x48>)
+    1380:	6952      	ldr	r2, [r2, #20]
+    1382:	6879      	ldr	r1, [r7, #4]
+    1384:	2001      	movs	r0, #1
+    1386:	1c04      	adds	r4, r0, #0
+    1388:	408c      	lsls	r4, r1
+    138a:	1c21      	adds	r1, r4, #0
+    138c:	43c9      	mvns	r1, r1
+    138e:	400a      	ands	r2, r1
+    1390:	615a      	str	r2, [r3, #20]
+    1392:	e00c      	b.n	13ae <gpioc_pddr_config+0x42>
+	}
+	//if direction is output (GPIO_PDDR_OUT)
+	else if(direction == 1)
+    1394:	683b      	ldr	r3, [r7, #0]
+    1396:	2b01      	cmp	r3, #1
+    1398:	d109      	bne.n	13ae <gpioc_pddr_config+0x42>
+	{
+		GPIOC_PDDR |= (1 << pin);
+    139a:	4b06      	ldr	r3, [pc, #24]	; (13b4 <gpioc_pddr_config+0x48>)
+    139c:	4a05      	ldr	r2, [pc, #20]	; (13b4 <gpioc_pddr_config+0x48>)
+    139e:	6951      	ldr	r1, [r2, #20]
+    13a0:	687a      	ldr	r2, [r7, #4]
+    13a2:	2001      	movs	r0, #1
+    13a4:	1c04      	adds	r4, r0, #0
+    13a6:	4094      	lsls	r4, r2
+    13a8:	1c22      	adds	r2, r4, #0
+    13aa:	430a      	orrs	r2, r1
+    13ac:	615a      	str	r2, [r3, #20]
+	}
+}
+    13ae:	46bd      	mov	sp, r7
+    13b0:	b003      	add	sp, #12
+    13b2:	bd90      	pop	{r4, r7, pc}
+    13b4:	400ff080 	.word	0x400ff080
+
+000013b8 <print_charset1>:
+	PORT_PCR(PORT_C, 12) &= ~(0b1111) << 16;
+	PORT_PCR(PORT_C, 12) |= 0b1010 << 16;
+}
+
+void print_charset1()
+{
+    13b8:	b580      	push	{r7, lr}
+    13ba:	b082      	sub	sp, #8
+    13bc:	af00      	add	r7, sp, #0
+	nokia_lcd_clr();
+    13be:	f7ff fd7f 	bl	ec0 <nokia_lcd_clr>
+	for(int ch = 32; ch <= 103; ch++)
+    13c2:	2320      	movs	r3, #32
+    13c4:	607b      	str	r3, [r7, #4]
+    13c6:	e007      	b.n	13d8 <print_charset1+0x20>
+	{
+		nokia_lcd_draw_char((char) ch);
+    13c8:	687b      	ldr	r3, [r7, #4]
+    13ca:	b2db      	uxtb	r3, r3
+    13cc:	1c18      	adds	r0, r3, #0
+    13ce:	f7ff fcef 	bl	db0 <nokia_lcd_draw_char>
+}
+
+void print_charset1()
+{
+	nokia_lcd_clr();
+	for(int ch = 32; ch <= 103; ch++)
+    13d2:	687b      	ldr	r3, [r7, #4]
+    13d4:	3301      	adds	r3, #1
+    13d6:	607b      	str	r3, [r7, #4]
+    13d8:	687b      	ldr	r3, [r7, #4]
+    13da:	2b67      	cmp	r3, #103	; 0x67
+    13dc:	ddf4      	ble.n	13c8 <print_charset1+0x10>
+	{
+		nokia_lcd_draw_char((char) ch);
+	}
+}
+    13de:	46bd      	mov	sp, r7
+    13e0:	b002      	add	sp, #8
+    13e2:	bd80      	pop	{r7, pc}
+
+000013e4 <print_charset2>:
+
+void print_charset2()
+{
+    13e4:	b580      	push	{r7, lr}
+    13e6:	b082      	sub	sp, #8
+    13e8:	af00      	add	r7, sp, #0
+	nokia_lcd_clr();
+    13ea:	f7ff fd69 	bl	ec0 <nokia_lcd_clr>
+	for(int ch = 104; ch <= 126; ch++)
+    13ee:	2368      	movs	r3, #104	; 0x68
+    13f0:	607b      	str	r3, [r7, #4]
+    13f2:	e007      	b.n	1404 <print_charset2+0x20>
+	{
+		nokia_lcd_draw_char((char) ch);
+    13f4:	687b      	ldr	r3, [r7, #4]
+    13f6:	b2db      	uxtb	r3, r3
+    13f8:	1c18      	adds	r0, r3, #0
+    13fa:	f7ff fcd9 	bl	db0 <nokia_lcd_draw_char>
+}
+
+void print_charset2()
+{
+	nokia_lcd_clr();
+	for(int ch = 104; ch <= 126; ch++)
+    13fe:	687b      	ldr	r3, [r7, #4]
+    1400:	3301      	adds	r3, #1
+    1402:	607b      	str	r3, [r7, #4]
+    1404:	687b      	ldr	r3, [r7, #4]
+    1406:	2b7e      	cmp	r3, #126	; 0x7e
+    1408:	ddf4      	ble.n	13f4 <print_charset2+0x10>
+	{
+		nokia_lcd_draw_char((char) ch);
+	}
+}
+    140a:	46bd      	mov	sp, r7
+    140c:	b002      	add	sp, #8
+    140e:	bd80      	pop	{r7, pc}
